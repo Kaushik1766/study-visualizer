@@ -28,6 +28,7 @@ const StudyDetailPage = () => {
     const { data: studies, isLoading, error } = useStudies();
     const [activeSegmentKey, setActiveSegmentKey] = useState<string | null>(null);
     const [activeViewMode, setActiveViewMode] = useState<ActiveViewModeType>('B');
+    const [targetSegmentName, setTargetSegmentName] = useState<string | null>(null); // Added state
 
     const study = useMemo(() => {
         if (!studies || !studyId) return null;
@@ -196,25 +197,59 @@ const StudyDetailPage = () => {
 
     useEffect(() => {
         if (displayableSegments.length > 0) {
-            const currentSegmentIsValid = activeSegmentKey && displayableSegments.some(s => s.key === activeSegmentKey);
-            if (!currentSegmentIsValid) {
-                const overallSegment = displayableSegments.find(s => s.name === "Overall");
-                if (overallSegment) {
-                    setActiveSegmentKey(overallSegment.key);
-                } else if (displayableSegments.length > 0) {
-                    setActiveSegmentKey(displayableSegments[0].key);
-                } else {
-                    setActiveSegmentKey(null);
+            let keySetFromTarget = false;
+            if (targetSegmentName) {
+                const targetInNewSegments = displayableSegments.find(s => s.name === targetSegmentName);
+                if (targetInNewSegments) {
+                    setActiveSegmentKey(targetInNewSegments.key);
+                    keySetFromTarget = true;
+                }
+                setTargetSegmentName(null); // Consume the target name
+            }
+
+            if (!keySetFromTarget) {
+                // This block now handles initial load, or if targetSegmentName didn't match,
+                // or if activeSegmentKey is invalid for current segments for other reasons.
+                const currentSegmentStillValid = activeSegmentKey && displayableSegments.some(s => s.key === activeSegmentKey);
+                if (!currentSegmentStillValid) {
+                    const overallSegment = displayableSegments.find(s => s.name === "Overall");
+                    if (overallSegment) {
+                        setActiveSegmentKey(overallSegment.key);
+                    } else if (displayableSegments.length > 0) {
+                        // Default to the first segment if "Overall" is not found
+                        setActiveSegmentKey(displayableSegments[0].key);
+                    } else {
+                        // This case should ideally not be reached if displayableSegments.length > 0
+                        setActiveSegmentKey(null);
+                    }
                 }
             }
         } else {
+            // No displayable segments, so no active key
             setActiveSegmentKey(null);
+            if (targetSegmentName) { // Clear target if no segments available
+                setTargetSegmentName(null);
+            }
         }
-    }, [displayableSegments, activeSegmentKey]);
+    }, [displayableSegments, targetSegmentName]); // Dependencies updated
 
     const handleViewModeChange = (mode: ActiveViewModeType) => {
+        if (activeSegmentKey) {
+            // Find the name of the current segment from the *current* displayableSegments list
+            // displayableSegments here is based on the *old* activeViewMode, before setActiveViewMode(mode)
+            const currentActiveSegmentInfo = displayableSegments.find(s => s.key === activeSegmentKey);
+            if (currentActiveSegmentInfo) {
+                setTargetSegmentName(currentActiveSegmentInfo.name);
+            } else {
+                // Fallback if current activeSegmentKey isn't found (should be rare)
+                setTargetSegmentName("Overall");
+            }
+        } else {
+            // If no segment is currently active, target "Overall" by default for the new view
+            setTargetSegmentName("Overall");
+        }
         setActiveViewMode(mode);
-        setActiveSegmentKey(null); // Reset active segment when view mode changes
+        // setActiveSegmentKey(null); // This line was correctly removed in the previous attempt
     };
 
     const formatDate = (dateString: string | null | undefined) => {
