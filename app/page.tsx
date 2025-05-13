@@ -1,103 +1,213 @@
-import Image from "next/image";
+'use client'
+import { StudyResponse } from '@/types/StudyResponse'
+import React, { useState, useMemo } from 'react'
+import { useStudies } from './hooks/useStudies'
+import { FiCheckCircle, FiClock, FiCalendar, FiFilter } from 'react-icons/fi'
+import FilterPanel from '@/components/FilterPanel'
+import StudyCard from '@/components/StudyCard'
+import NoStudiesFound from '@/components/NoStudiesFound'
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+const getVisualStatus = (study: StudyResponse) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    let statusText = study.studyStatus;
+    let badgeClass = 'bg-gray-200 text-gray-700';
+    let IconComponent: React.ElementType | null = null;
+
+    const lowerCaseStatus = study.studyStatus?.toLowerCase();
+
+    if (lowerCaseStatus === 'completed') {
+        statusText = 'Completed';
+        badgeClass = 'bg-green-100 text-green-700';
+        IconComponent = FiCheckCircle;
+    } else if (lowerCaseStatus === 'ongoing') {
+        statusText = 'Ongoing';
+        badgeClass = 'bg-yellow-100 text-yellow-700';
+        IconComponent = FiClock;
+    } else {
+        try {
+            const endDate = study.studyEnded ? new Date(study.studyEnded) : null;
+            const startDate = study.studyStarted ? new Date(study.studyStarted) : null;
+
+            if (endDate && !isNaN(endDate.getTime()) && endDate.getTime() < today.getTime()) {
+                statusText = 'Completed';
+                badgeClass = 'bg-green-100 text-green-700';
+                IconComponent = FiCheckCircle;
+            } else if (startDate && !isNaN(startDate.getTime()) && startDate.getTime() <= today.getTime() && (!endDate || isNaN(endDate.getTime()) || endDate.getTime() >= today.getTime())) {
+                statusText = 'Ongoing';
+                badgeClass = 'bg-yellow-100 text-yellow-700';
+                IconComponent = FiClock;
+            } else if (startDate && !isNaN(startDate.getTime()) && startDate.getTime() > today.getTime()) {
+                statusText = 'Scheduled';
+                badgeClass = 'bg-blue-100 text-blue-700';
+                IconComponent = FiCalendar;
+            } else {
+                statusText = study.studyStatus;
+                badgeClass = 'bg-gray-100 text-gray-600';
+            }
+        } catch (e) {
+            console.warn("Error parsing study dates for status determination:", e);
+            statusText = study.studyStatus;
+            badgeClass = 'bg-gray-100 text-gray-600';
+        }
+    }
+    return { text: statusText, badgeClass, IconComponent };
+};
+
+function Page() {
+    const [selectedStudyForModal, setSelectedStudyForModal] = useState<StudyResponse | null>(null)
+    const { data: studies, error, isLoading } = useStudies()
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedTags, setSelectedTags] = useState<string[]>([]);
+    const [startDateFilter, setStartDateFilter] = useState('');
+    const [endDateFilter, setEndDateFilter] = useState('');
+    const [showFiltersMobile, setShowFiltersMobile] = useState(false);
+
+    const allTags = useMemo(() => {
+        if (!studies) return [];
+        const tagsSet = new Set<string>();
+        studies.forEach(study => {
+            study.studyKeywords?.forEach(tag => tagsSet.add(tag));
+        });
+        return Array.from(tagsSet).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+    }, [studies]);
+
+    const handleTagClick = (tag: string) => {
+        setSelectedTags(prevTags =>
+            prevTags.includes(tag)
+                ? prevTags.filter(t => t !== tag)
+                : [...prevTags, tag]
+        );
+    };
+
+    const clearFilters = () => {
+        setSearchTerm('');
+        setSelectedTags([]);
+        setStartDateFilter('');
+        setEndDateFilter('');
+    };
+
+    const filteredStudies = useMemo(() => {
+        if (!studies) return [];
+        return studies.filter(study => {
+            const matchesSearchTerm = study.studyTitle.toLowerCase().includes(searchTerm.toLowerCase());
+
+            const matchesTags = selectedTags.length === 0 || selectedTags.every(tag => study.studyKeywords?.includes(tag));
+
+            let matchesDate = true;
+            if (startDateFilter || endDateFilter) {
+                try {
+                    const studyStartDate = study.studyStarted ? new Date(study.studyStarted) : null;
+                    const studyEndDate = study.studyEnded ? new Date(study.studyEnded) : (studyStartDate ? new Date(study.studyStarted) : null);
+                    if (studyEndDate) studyEndDate.setHours(23, 59, 59, 999);
+
+                    const filterStartDate = startDateFilter ? new Date(startDateFilter) : null;
+                    if (filterStartDate) filterStartDate.setHours(0, 0, 0, 0);
+
+                    const filterEndDate = endDateFilter ? new Date(endDateFilter) : null;
+                    if (filterEndDate) filterEndDate.setHours(23, 59, 59, 999);
+
+                    if (filterStartDate && studyStartDate && studyStartDate < filterStartDate) {
+                        matchesDate = false;
+                    }
+                    const effectiveStudyEndDate = studyEndDate || studyStartDate;
+                    if (filterEndDate && effectiveStudyEndDate && effectiveStudyEndDate > filterEndDate) {
+                        if (studyStartDate && studyStartDate > filterEndDate) {
+                            matchesDate = false;
+                        }
+                    }
+                    if (filterStartDate && filterEndDate) {
+                        matchesDate = !!((studyStartDate && studyStartDate <= filterEndDate) && (effectiveStudyEndDate && effectiveStudyEndDate >= filterStartDate));
+                    } else if (filterStartDate) {
+                        matchesDate = !!(effectiveStudyEndDate && effectiveStudyEndDate >= filterStartDate);
+                    } else if (filterEndDate) {
+                        matchesDate = !!(studyStartDate && studyStartDate <= filterEndDate);
+                    }
+
+                } catch (e) {
+                    console.warn("Error parsing dates for filtering:", e);
+                    matchesDate = true;
+                }
+            }
+            return matchesSearchTerm && matchesTags && matchesDate;
+        });
+    }, [studies, searchTerm, selectedTags, startDateFilter, endDateFilter]);
+
+    if (isLoading) {
+        return <div className="flex justify-center items-center min-h-screen text-xl font-semibold bg-gray-100">Loading studies...</div>
+    }
+
+    if (error) {
+        return <div className="flex justify-center items-center min-h-screen text-red-500 text-xl bg-gray-100 p-4">Error fetching studies: {error.message}</div>
+    }
+
+    const filterPanelProps = {
+        searchTerm,
+        setSearchTerm,
+        startDateFilter,
+        setStartDateFilter,
+        endDateFilter,
+        setEndDateFilter,
+        allTags,
+        selectedTags,
+        handleTagClick,
+        clearFilters,
+    };
+
+    return (
+        <div className="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+            <header className="max-w-7xl mx-auto mb-10 px-4 md:px-0">
+                <h1 className="text-4xl font-bold tracking-tight text-gray-900">All Studies</h1>
+            </header>
+
+            <div className="md:hidden mb-6 px-4">
+                <button
+                    onClick={() => setShowFiltersMobile(!showFiltersMobile)}
+                    className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                >
+                    <FiFilter className="h-5 w-5 mr-2" />
+                    {showFiltersMobile ? 'Hide Filters' : 'Show Filters'}
+                </button>
+            </div>
+
+            <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-8">
+                {showFiltersMobile && (
+                    <div className="md:hidden mb-6">
+                        <FilterPanel {...filterPanelProps} />
+                    </div>
+                )}
+                <div className="hidden md:block">
+                    <FilterPanel {...filterPanelProps} />
+                </div>
+
+                <main className="flex-1">
+                    {filteredStudies.length > 0 ? (
+                        <div className="space-y-6">
+                            {filteredStudies.map((study: StudyResponse) => {
+                                const { text: statusText, badgeClass, IconComponent } = getVisualStatus(study);
+                                return (
+                                    <StudyCard
+                                        key={study._id}
+                                        study={study}
+                                        onSelectStudy={setSelectedStudyForModal}
+                                        statusText={statusText}
+                                        badgeClass={badgeClass}
+                                        IconComponent={IconComponent}
+                                    />
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <NoStudiesFound
+                            clearFilters={clearFilters}
+                            showClearFiltersButton={!!(searchTerm || selectedTags.length > 0 || startDateFilter || endDateFilter)}
+                        />
+                    )}
+                </main>
+            </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+    )
 }
+
+export default Page
