@@ -56,7 +56,6 @@ const getVisualStatus = (study: StudyResponse) => {
 };
 
 function Page() {
-    const [selectedStudyForModal, setSelectedStudyForModal] = useState<StudyResponse | null>(null)
     const { data: studies, error, isLoading } = useStudies()
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -190,7 +189,6 @@ function Page() {
                                     <StudyCard
                                         key={study._id}
                                         study={study}
-                                        onSelectStudy={setSelectedStudyForModal}
                                         statusText={statusText}
                                         badgeClass={badgeClass}
                                         IconComponent={IconComponent}

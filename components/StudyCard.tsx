@@ -3,10 +3,10 @@
 import React from 'react';
 import { StudyResponse } from '@/types/StudyResponse';
 import { FiMoreVertical } from 'react-icons/fi';
+import { useRouter } from 'next/navigation'; // Import useRouter
 
 interface StudyCardProps {
     study: StudyResponse;
-    onSelectStudy: (study: StudyResponse) => void;
     statusText: string;
     badgeClass: string;
     IconComponent: React.ElementType | null;
@@ -14,18 +14,22 @@ interface StudyCardProps {
 
 const StudyCard: React.FC<StudyCardProps> = ({
     study,
-    onSelectStudy,
     statusText,
     badgeClass,
     IconComponent,
 }) => {
+    const router = useRouter(); // Initialize useRouter
     const createdDate = study.studyStarted ? new Date(study.studyStarted).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' }) : 'N/A';
+
+    const handleCardClick = () => {
+        router.push(`/study/${study._id}`); // Navigate to study details page
+    };
 
     return (
         <div
             key={study._id}
             className="bg-white rounded-xl shadow-lg p-6 cursor-pointer transition-all duration-300 ease-in-out hover:shadow-2xl hover:scale-[1.015]"
-            onClick={() => onSelectStudy(study)}
+            onClick={handleCardClick} // Updated onClick handler
         >
             <div className="flex justify-between items-start">
                 <div className="flex-grow pr-4">
