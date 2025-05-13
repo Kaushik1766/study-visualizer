@@ -36,25 +36,65 @@ const StudyDetailPage = () => {
 
     const displayableSegments = useMemo(() => {
         if (!study?.studyData) return [];
-        return Object.keys(study.studyData)
-            .filter(key => key.startsWith(`(${activeViewMode})`))
-            .map(key => ({
-                key,
-                name: getSegmentDisplayName(key),
-            }))
-            .sort((a, b) => {
-                if (a.name === "Overall") return -1;
-                if (b.name === "Overall") return 1;
-                if (a.name === "Market Segments") return -1;
-                if (b.name === "Market Segments") return 1;
+        const newSegments: Array<{ key: string; name: string; parentKey: string; isMindsetSubTab: boolean }> = [];
+
+        Object.keys(study.studyData).forEach(key => {
+            if (key.startsWith(`(${activeViewMode})`)) {
+                const segmentDisplayName = getSegmentDisplayName(key);
+
+                if (segmentDisplayName === "Market Segments") {
+                    const mindsetsData = study.studyData[key];
+                    if (mindsetsData?.["Base Values"]) {
+                        const mindset1of2 = mindsetsData["Base Values"]["Mindset 1 of 2"];
+                        const mindset1of3 = mindsetsData["Base Values"]["Mindset 1 of 3"];
+
+                        if (mindset1of2 !== undefined && mindset1of2 !== null) {
+                            newSegments.push({
+                                key: `${key}_Mindset 1 of 2`,
+                                name: "Mindset 1 of 2",
+                                parentKey: key,
+                                isMindsetSubTab: true,
+                            });
+                        }
+                        if (mindset1of3 !== undefined && mindset1of3 !== null) {
+                            newSegments.push({
+                                key: `${key}_Mindset 1 of 3`,
+                                name: "Mindset 1 of 3",
+                                parentKey: key,
+                                isMindsetSubTab: true,
+                            });
+                        }
+                    }
+                } else if (segmentDisplayName !== "Combined") {
+                    newSegments.push({
+                        key,
+                        name: segmentDisplayName,
+                        parentKey: key,
+                        isMindsetSubTab: false,
+                    });
+                }
+            }
+        });
+
+        return newSegments.sort((a, b) => {
+            if (a.name === "Overall") return -1;
+            if (b.name === "Overall") return 1;
+            if (a.isMindsetSubTab && !b.isMindsetSubTab) return -1;
+            if (!a.isMindsetSubTab && b.isMindsetSubTab) return 1;
+            if (a.isMindsetSubTab && b.isMindsetSubTab) {
                 return a.name.localeCompare(b.name);
-            });
+            }
+            return a.name.localeCompare(b.name);
+        });
     }, [study?.studyData, activeViewMode]);
 
     const activeSegmentData: Segment | undefined = useMemo(() => {
-        if (!study || !activeSegmentKey) return undefined;
-        return study.studyData[activeSegmentKey];
-    }, [study, activeSegmentKey]);
+        if (!study || !activeSegmentKey || !displayableSegments) return undefined;
+        const currentSegmentConfig = displayableSegments.find(s => s.key === activeSegmentKey);
+        const dataKey = currentSegmentConfig?.parentKey; // Always use parentKey from config
+        if (!dataKey) return undefined;
+        return study.studyData[dataKey];
+    }, [study, activeSegmentKey, displayableSegments]);
 
     const overallBaseSize = useMemo(() => {
         if (!study) return 0;
@@ -63,29 +103,71 @@ const StudyDetailPage = () => {
         return baseSizeFromOverall ?? study.studyRespondents ?? 0;
     }, [study, activeViewMode]);
 
+    const activeSegmentConfig = useMemo(() => {
+        if (!activeSegmentKey || !displayableSegments) return null;
+        return displayableSegments.find(s => s.key === activeSegmentKey) || null;
+    }, [activeSegmentKey, displayableSegments]);
+
     const marketSegmentColumns = useMemo(() => {
-        const segmentName = activeSegmentKey ? getSegmentDisplayName(activeSegmentKey) : "";
-        if (segmentName === 'Market Segments' && activeSegmentData?.["Base Values"]) {
-            return Object.entries(activeSegmentData["Base Values"])
-                .filter(([key, value]) => (key.toLowerCase().includes('mindset') || key.toLowerCase().includes('segment')) && value !== null && !key.startsWith("Unnamed:"))
-                .map(([key, value]) => ({ header: key, count: value as number || 0 }));
+        if (!activeSegmentConfig || !activeSegmentData?.["Base Values"]) {
+            return [];
         }
+
+        const parentBaseValues = activeSegmentData["Base Values"];
+        const currentTabName = activeSegmentConfig.name;
+
+        if (activeSegmentConfig.isMindsetSubTab && getSegmentDisplayName(activeSegmentConfig.parentKey) === 'Market Segments') {
+            const match = currentTabName.match(/Mindset (\d+) of (\d+)/);
+            if (match) {
+                const seriesMax = match[2]; // "2" or "3" from "Mindset X of Y"
+                const relevantMindsetKeys = Object.keys(parentBaseValues)
+                    .filter(key => {
+                        const keyMatch = key.match(/Mindset (\d+) of (\d+)/);
+                        return keyMatch && keyMatch[2] === seriesMax && parentBaseValues[key] !== null;
+                    });
+
+                return relevantMindsetKeys.map(key => ({
+                    header: key,
+                    count: parentBaseValues[key] as number || 0
+                })).sort((a, b) => a.header.localeCompare(b.header));
+            }
+            // Fallback for a mindset sub-tab that doesn't match the pattern
+            const count = parentBaseValues[currentTabName];
+            if (count !== undefined && count !== null) {
+                return [{ header: currentTabName, count: count as number || 0 }];
+            }
+            return [];
+        } else if (currentTabName === 'Market Segments' && activeSegmentConfig.parentKey === activeSegmentConfig.key) {
+            return Object.entries(parentBaseValues)
+                .filter(([key, value]) => value !== null && key.startsWith("Mindset"))
+                .map(([key, value]) => ({ header: key, count: value as number || 0 }))
+                .sort((a, b) => a.header.localeCompare(b.header));
+        }
+
         return [];
-    }, [activeSegmentKey, activeSegmentData]);
+    }, [activeSegmentConfig, activeSegmentData, getSegmentDisplayName]);
 
     const ageDemographicColumns = useMemo(() => {
-        const segmentName = activeSegmentKey ? getSegmentDisplayName(activeSegmentKey) : "";
+        if (!activeSegmentKey || !activeSegmentData?.["Base Values"] || !displayableSegments) return [];
+        const currentSegmentConfig = displayableSegments.find(s => s.key === activeSegmentKey);
+        const dataKeyForName = currentSegmentConfig?.parentKey;
+        const segmentName = dataKeyForName ? getSegmentDisplayName(dataKeyForName) : "";
+
         if (segmentName === 'Age' && activeSegmentData?.["Base Values"]) {
             return Object.entries(activeSegmentData["Base Values"])
                 .filter(([key, value]) => value !== null && !key.startsWith("Unnamed:") && /\d+(?: - \d+)?\+?/.test(key))
                 .map(([key, value]) => ({ header: key, count: value as number || 0 }));
         }
         return [];
-    }, [activeSegmentKey, activeSegmentData]);
+    }, [activeSegmentKey, activeSegmentData, displayableSegments]);
 
     const prelimSpecificAgeColumns = useMemo(() => {
-        const currentSegmentName = activeSegmentKey ? getSegmentDisplayName(activeSegmentKey) : "";
-        if (currentSegmentName === 'Prelim' && study?.studyData) {
+        if (!activeSegmentKey || !study?.studyData || !displayableSegments) return [];
+        const currentSegmentConfig = displayableSegments.find(s => s.key === activeSegmentKey);
+        const dataKeyForName = currentSegmentConfig?.parentKey;
+        const currentSegmentDisplayName = dataKeyForName ? getSegmentDisplayName(dataKeyForName) : "";
+
+        if (currentSegmentDisplayName === 'Prelim' && study?.studyData) {
             const ageSegmentKeyForViewMode = Object.keys(study.studyData).find(key =>
                 key.startsWith(`(${activeViewMode})`) && getSegmentDisplayName(key) === 'Age'
             );
@@ -96,36 +178,21 @@ const StudyDetailPage = () => {
             }
         }
         return [];
-    }, [activeSegmentKey, study?.studyData, activeViewMode]);
+    }, [activeSegmentKey, study?.studyData, activeViewMode, displayableSegments]);
 
     const genderDemographicColumns = useMemo(() => {
-        const segmentName = activeSegmentKey ? getSegmentDisplayName(activeSegmentKey) : "";
+        if (!activeSegmentKey || !activeSegmentData?.["Base Values"] || !displayableSegments) return [];
+        const currentSegmentConfig = displayableSegments.find(s => s.key === activeSegmentKey);
+        const dataKeyForName = currentSegmentConfig?.parentKey;
+        const segmentName = dataKeyForName ? getSegmentDisplayName(dataKeyForName) : "";
+
         if (segmentName === 'Gender' && activeSegmentData?.["Base Values"]) {
             return Object.entries(activeSegmentData["Base Values"])
                 .filter(([key, value]) => (key.toLowerCase() === 'male' || key.toLowerCase() === 'female') && value !== null && !key.startsWith("Unnamed:"))
                 .map(([key, value]) => ({ header: key, count: value as number || 0 }));
         }
         return [];
-    }, [activeSegmentKey, activeSegmentData]);
-
-    const combinedColumns = useMemo(() => {
-        const segmentName = activeSegmentKey ? getSegmentDisplayName(activeSegmentKey) : "";
-        if (segmentName === 'Combined' && activeSegmentData?.["Base Values"]) {
-            return Object.entries(activeSegmentData["Base Values"])
-                .filter(([key, value]) => value !== null && !key.startsWith("Unnamed:"))
-                .map(([key, value]) => ({ header: key, count: value as number || 0 }))
-                .sort((a, b) => {
-                    if (a.header.match(/^\d/)) return -1;
-                    if (b.header.match(/^\d/)) return 1;
-                    if (a.header.toLowerCase() === 'male' || a.header.toLowerCase() === 'female') return -1;
-                    if (b.header.toLowerCase() === 'male' || b.header.toLowerCase() === 'female') return 1;
-                    if (a.header.toLowerCase().includes('mindset')) return -1;
-                    if (b.header.toLowerCase().includes('mindset')) return 1;
-                    return a.header.localeCompare(b.header);
-                });
-        }
-        return [];
-    }, [activeSegmentKey, activeSegmentData]);
+    }, [activeSegmentKey, activeSegmentData, displayableSegments]);
 
     useEffect(() => {
         if (displayableSegments.length > 0) {
@@ -201,12 +268,12 @@ const StudyDetailPage = () => {
                 <SegmentDataDisplay
                     activeSegmentKey={activeSegmentKey}
                     activeSegmentData={activeSegmentData}
+                    activeSegmentConfig={activeSegmentConfig}
                     getSegmentDisplayName={getSegmentDisplayName}
                     marketSegmentColumns={marketSegmentColumns}
                     ageDemographicColumns={ageDemographicColumns}
                     prelimSpecificAgeColumns={prelimSpecificAgeColumns}
                     genderDemographicColumns={genderDemographicColumns}
-                    combinedColumns={combinedColumns}
                 />
 
                 <footer className="mt-12 text-center">

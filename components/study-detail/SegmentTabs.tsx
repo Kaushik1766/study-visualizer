@@ -1,7 +1,12 @@
 import React from 'react';
 
 interface SegmentTabsProps {
-    segments: { key: string; name: string }[];
+    segments: Array<{
+        key: string;
+        name: string;
+        parentKey: string; // Added for type completeness
+        isMindsetSubTab: boolean; // Added for type completeness
+    }>;
     activeSegmentKey: string | null;
     onSegmentChange: (key: string) => void;
 }

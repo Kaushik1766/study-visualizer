@@ -51,7 +51,7 @@ export interface Option {
     Total?: number;
     'Age Segments'?: { [key: string]: number };
     'Gender Segments'?: { [key: string]: number };
-    Mindsets?: any[];
+    Mindsets?: Array<{ [key: string]: number }>;
     'Prelim-Answer Segments'?: PrelimAnswerSegment[];
 }
 

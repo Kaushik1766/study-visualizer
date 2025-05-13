@@ -9,23 +9,23 @@ interface SegmentColumn {
 interface SegmentDataDisplayProps {
     activeSegmentKey: string | null;
     activeSegmentData?: Segment;
+    activeSegmentConfig: { key: string; name: string; parentKey: string; isMindsetSubTab: boolean } | null;
     getSegmentDisplayName: (key: string) => string;
     marketSegmentColumns: SegmentColumn[];
     ageDemographicColumns: SegmentColumn[];
     prelimSpecificAgeColumns: SegmentColumn[];
     genderDemographicColumns: SegmentColumn[];
-    combinedColumns: SegmentColumn[];
 }
 
 const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
     activeSegmentKey,
     activeSegmentData,
+    activeSegmentConfig,
     getSegmentDisplayName,
     marketSegmentColumns,
     ageDemographicColumns,
     prelimSpecificAgeColumns,
     genderDemographicColumns,
-    combinedColumns,
 }) => {
     if (!activeSegmentData) {
         return <p className="text-center text-gray-500 py-10">Select a segment tab to view its data.</p>;
@@ -33,51 +33,66 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
 
     const segmentDisplayName = getSegmentDisplayName(activeSegmentKey || "");
 
+    // Determine if the current view is for Market Segments or its sub-tabs
+    const isMarketSegmentsView = activeSegmentConfig?.isMindsetSubTab || segmentDisplayName === 'Market Segments';
+
     return (
         <div className="mt-6 bg-white shadow-xl rounded-xl p-6 md:p-8">
             <h2 className="text-2xl font-semibold text-gray-700 mb-6">{segmentDisplayName} Data</h2>
             <div className="space-y-8">
-                {activeSegmentData.Data?.Questions?.map((question: Question, qIndex: number) => {
-                    if (segmentDisplayName === 'Market Segments') {
-                        return (
-                            <div key={qIndex} className="border border-gray-200 rounded-lg p-4">
-                                <h3 className="text-xl font-semibold text-gray-700 mb-3">{question.Question}</h3>
-                                {marketSegmentColumns.length > 0 && question.options && question.options.length > 0 ? (
-                                    <div className="overflow-x-auto mb-4">
-                                        <table className="min-w-full divide-y divide-gray-200">
-                                            <thead className="bg-gray-50">
-                                                <tr>
-                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Response</th>
-                                                    {marketSegmentColumns.map(col => (
-                                                        <th key={col.header} scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{col.header} ({col.count})</th>
-                                                    ))}
-                                                </tr>
-                                            </thead>
-                                            <tbody className="bg-white divide-y divide-gray-200">
-                                                {question.options?.map((option, oIndex) => (
-                                                    <tr key={oIndex}>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{option.optiontext}</td>
-                                                        {marketSegmentColumns.map(col => {
-                                                            let valueToShow = 'N/A';
-                                                            if (option.Mindsets && Array.isArray(option.Mindsets)) {
-                                                                const mindsetData = option.Mindsets.find(m => typeof m === 'object' && m !== null && m[col.header] !== undefined);
-                                                                if (mindsetData) valueToShow = String(mindsetData[col.header]);
-                                                            } else if ((option as any)[col.header] !== undefined) {
-                                                                valueToShow = String((option as any)[col.header]);
+                {/* Render logic for Market Segments and its sub-tabs (Mindsets) */}
+                {isMarketSegmentsView && activeSegmentData.Data?.Questions?.map((question: Question, qIndex: number) => (
+                    <div key={`market-segment-q-${qIndex}`} className="border border-gray-200 rounded-lg p-4">
+                        <h3 className="text-xl font-semibold text-gray-700 mb-3">{question.Question}</h3>
+                        {marketSegmentColumns.length > 0 && question.options && question.options.length > 0 ? (
+                            <div className="overflow-x-auto mb-4">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Response</th>
+                                            {marketSegmentColumns.map(col => (
+                                                <th key={col.header} scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    {col.header} ({col.count})
+                                                </th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {question.options?.map((option, oIndex) => (
+                                            <tr key={`market-segment-q-${qIndex}-opt-${oIndex}`}>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{option.optiontext}</td>
+                                                {marketSegmentColumns.map(col => {
+                                                    let cellValue: string | number = 'N/A';
+                                                    if (option.Mindsets && Array.isArray(option.Mindsets)) {
+                                                        const mindsetObject = option.Mindsets.find(
+                                                            m => m && typeof m === 'object' && m.hasOwnProperty(col.header)
+                                                        );
+                                                        if (mindsetObject) {
+                                                            const val = mindsetObject[col.header];
+                                                            if (val !== undefined && val !== null) {
+                                                                cellValue = val;
                                                             }
-                                                            return (
-                                                                <td key={col.header} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{valueToShow}</td>
-                                                            );
-                                                        })}
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                ) : <p className="text-sm text-gray-500">No market segment columns or options for this question.</p>}
+                                                        }
+                                                    }
+                                                    return (
+                                                        <td key={col.header} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            {String(cellValue)}
+                                                        </td>
+                                                    );
+                                                })}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
-                        );
-                    } else if (segmentDisplayName === 'Age') {
+                        ) : <p className="text-sm text-gray-500">No market segment columns or options for this question.</p>}
+                    </div>
+                ))}
+
+                {/* Render logic for other segment types (Age, Prelim, Gender, etc.) */}
+                {!isMarketSegmentsView && activeSegmentData.Data?.Questions?.map((question: Question, qIndex: number) => {
+                    // Existing logic for Age
+                    if (segmentDisplayName === 'Age') {
                         return (
                             <div key={qIndex} className="border border-gray-200 rounded-lg p-4">
                                 <h3 className="text-xl font-semibold text-gray-700 mb-3">{question.Question}</h3>
@@ -109,7 +124,9 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
                                 ) : <p className="text-sm text-gray-500">No age demographic columns or options for this question.</p>}
                             </div>
                         );
-                    } else if (segmentDisplayName === 'Prelim') {
+                    }
+                    // Existing logic for Prelim
+                    else if (segmentDisplayName === 'Prelim') {
                         return (
                             <div key={qIndex} className="border border-gray-200 rounded-lg p-4">
                                 <h3 className="text-xl font-semibold text-gray-700 mb-3">{question.Question}</h3>
@@ -141,7 +158,9 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
                                 ) : <p className="text-sm text-gray-500">No age breakdown columns available or no options for this question.</p>}
                             </div>
                         );
-                    } else if (segmentDisplayName === 'Gender') {
+                    }
+                    // Existing logic for Gender
+                    else if (segmentDisplayName === 'Gender') {
                         return (
                             <div key={qIndex} className="border border-gray-200 rounded-lg p-4">
                                 <h3 className="text-xl font-semibold text-gray-700 mb-3">{question.Question}</h3>
@@ -171,54 +190,6 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
                                         </table>
                                     </div>
                                 ) : <p className="text-sm text-gray-500">No gender demographic columns or options for this question.</p>}
-                            </div>
-                        );
-                    } else if (segmentDisplayName === 'Combined') {
-                        return (
-                            <div key={qIndex} className="border border-gray-200 rounded-lg p-4">
-                                <h3 className="text-xl font-semibold text-gray-700 mb-3">{question.Question}</h3>
-                                {combinedColumns.length > 0 && question.options && question.options.length > 0 ? (
-                                    <div className="overflow-x-auto mb-4">
-                                        <table className="min-w-full divide-y divide-gray-200">
-                                            <thead className="bg-gray-50">
-                                                <tr>
-                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Response</th>
-                                                    {combinedColumns.map(col => (
-                                                        <th key={col.header} scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">{col.header} ({col.count})</th>
-                                                    ))}
-                                                </tr>
-                                            </thead>
-                                            <tbody className="bg-white divide-y divide-gray-200">
-                                                {question.options?.map((option, oIndex) => (
-                                                    <tr key={oIndex}>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{option.optiontext}</td>
-                                                        {combinedColumns.map(col => {
-                                                            let valueToShow = 'N/A';
-                                                            const colHeaderStr = col.header;
-
-                                                            if (option.Mindsets && Array.isArray(option.Mindsets) &&
-                                                                (colHeaderStr.toLowerCase().includes('mindset') || colHeaderStr.toLowerCase().includes('segment'))) {
-                                                                const mindsetData = option.Mindsets.find(m => typeof m === 'object' && m !== null && m[colHeaderStr] !== undefined);
-                                                                if (mindsetData) {
-                                                                    valueToShow = String((mindsetData as any)[colHeaderStr]);
-                                                                }
-                                                            } else if (/\d+(?: - \d+)?\+?/.test(colHeaderStr) && option["Age Segments"]?.[colHeaderStr] !== undefined) {
-                                                                valueToShow = String(option["Age Segments"][colHeaderStr]);
-                                                            } else if ((colHeaderStr.toLowerCase() === 'male' || colHeaderStr.toLowerCase() === 'female') && option["Gender Segments"]?.[colHeaderStr] !== undefined) {
-                                                                valueToShow = String(option["Gender Segments"][colHeaderStr]);
-                                                            } else if ((option as any)[colHeaderStr] !== undefined) {
-                                                                valueToShow = String((option as any)[colHeaderStr]);
-                                                            }
-                                                            return (
-                                                                <td key={col.header} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{valueToShow}</td>
-                                                            );
-                                                        })}
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                ) : <p className="text-sm text-gray-500">No combined columns or options for this question.</p>}
                             </div>
                         );
                     } else { // Default rendering for other segment types or when no specific table structure is defined
