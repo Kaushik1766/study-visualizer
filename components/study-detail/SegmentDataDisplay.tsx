@@ -41,12 +41,14 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
     const isMarketSegmentsView = activeSegmentConfig?.isMindsetSubTab || segmentDisplayName === 'Market Segments';
 
     const getColorForValue = (value: number, minValue: number, maxValue: number) => {
+        // Updated color palette matching the one in SegmentHeatMap
         const colors = [
-            '#f7fbff', '#deebf7', '#c6dbef', '#9ecae1', '#6baed6', '#4292c6', '#2171b5', '#08519c', '#08306b'
+            '#e0f2fc', '#c4e4f6', '#99cce8', '#6badd9', '#4f91c8', '#3e74b3', '#2a58a5', '#163e8e', '#082776'
         ];
 
         if (minValue === maxValue) return colors[Math.floor(colors.length / 2)];
 
+        // Normalize the value between 0 and colors.length-1
         const normalizedValue = (value - minValue) / (maxValue - minValue) * (colors.length - 1);
         const colorIndex = Math.floor(normalizedValue);
 

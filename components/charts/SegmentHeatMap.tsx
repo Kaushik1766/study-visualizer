@@ -16,9 +16,10 @@ interface SegmentHeatMapProps {
     yAxisTitle?: string;
 }
 
-// Default color range for heatmap from light to dark
+// Updated color range for better contrast with white background
+// Using a more vibrant blue-purple gradient
 const defaultColorRange = [
-    '#ffffcc', '#c7e9b4', '#7fcdbb', '#41b6c4', '#1d91c0', '#225ea8', '#0c2c84'
+    '#e0f2fc', '#c4e4f6', '#99cce8', '#6badd9', '#4f91c8', '#3e74b3', '#2a58a5', '#163e8e', '#082776'
 ];
 
 const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
@@ -95,17 +96,17 @@ const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
     // Create a legend with color scale
     const renderColorLegend = () => {
         return (
-            <div className="flex flex-col items-center mt-4">
+            <div className="flex flex-col items-center mt-6 bg-gray-50 py-2 rounded-md">
                 <p className="text-sm text-gray-700 mb-1">Value Scale</p>
                 <div className="flex items-center">
                     <span className="text-xs mr-2">{minValue}</span>
-                    <div className="flex h-4">
+                    <div className="flex h-6 border border-gray-300 shadow-sm">
                         {colorRange.map((color, i) => (
                             <div
                                 key={i}
                                 style={{
                                     backgroundColor: color,
-                                    width: '20px',
+                                    width: '24px',
                                     height: '100%'
                                 }}
                             />
@@ -124,41 +125,43 @@ const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
                 <div>{yAxisTitle}</div>
                 <div>{xAxisTitle}</div>
             </div>
-            <ResponsiveContainer width="100%" height={chartHeight}>
-                <ScatterChart
-                    margin={{
-                        top: 20,
-                        right: 50,
-                        bottom: 20,
-                        left: 180, // More space for Y-axis labels
-                    }}
-                >
-                    <XAxis
-                        type="category"
-                        dataKey="x"
-                        name="option"
-                        allowDuplicatedCategory={false}
-                        tick={{ fontSize: 12 }}
-                        interval={0}
-                        height={60}
-                        angle={-25}
-                        textAnchor="end"
-                    />
-                    <YAxis
-                        type="category"
-                        dataKey="y"
-                        name="segment"
-                        allowDuplicatedCategory={false}
-                        width={170}
-                        tick={{ fontSize: 12 }}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Scatter
-                        data={chartData}
-                        shape={<CustomizedShape />}
-                    />
-                </ScatterChart>
-            </ResponsiveContainer>
+            <div className="bg-white border border-gray-100 rounded-md">
+                <ResponsiveContainer width="100%" height={chartHeight}>
+                    <ScatterChart
+                        margin={{
+                            top: 20,
+                            right: 50,
+                            bottom: 20,
+                            left: 180, // More space for Y-axis labels
+                        }}
+                    >
+                        <XAxis
+                            type="category"
+                            dataKey="x"
+                            name="option"
+                            allowDuplicatedCategory={false}
+                            tick={{ fontSize: 12 }}
+                            interval={0}
+                            height={60}
+                            angle={-25}
+                            textAnchor="end"
+                        />
+                        <YAxis
+                            type="category"
+                            dataKey="y"
+                            name="segment"
+                            allowDuplicatedCategory={false}
+                            width={170}
+                            tick={{ fontSize: 12 }}
+                        />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Scatter
+                            data={chartData}
+                            shape={<CustomizedShape />}
+                        />
+                    </ScatterChart>
+                </ResponsiveContainer>
+            </div>
             {renderColorLegend()}
         </div>
     );
