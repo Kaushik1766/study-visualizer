@@ -2,23 +2,22 @@ import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface BarChartDataPoint {
-    [key: string]: string | number; // Allows for dynamic keys for bars + xAxisKey (category)
+    [key: string]: string | number;
 }
 
 interface BarConfig {
     dataKey: string;
     fill: string;
-    name: string; // Name for the legend
+    name: string;
 }
 
 interface SegmentBarChartProps {
     data: BarChartDataPoint[];
     bars: BarConfig[];
-    categoryKey: string; // The key in data objects that represents the category (e.g., question option text)
+    categoryKey: string;
     title?: string;
 }
 
-// Predefined colors for the bars - updated with brighter colors for better contrast
 export const barColors = [
     '#3b82f6', '#10b981', '#f97316', '#8b5cf6', '#ef4444',
     '#0ea5e9', '#14b8a6', '#f59e0b', '#6366f1', '#ec4899'
@@ -27,19 +26,13 @@ export const barColors = [
 const SegmentBarChart: React.FC<SegmentBarChartProps> = ({ data, bars, categoryKey, title }) => {
     const [isMobile, setIsMobile] = useState(false);
 
-    // Check for mobile view on mount and window resize
     useEffect(() => {
         const checkMobile = () => {
             setIsMobile(window.innerWidth < 768);
         };
 
-        // Initial check
         checkMobile();
-
-        // Add resize listener
         window.addEventListener('resize', checkMobile);
-
-        // Clean up
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
@@ -51,7 +44,6 @@ const SegmentBarChart: React.FC<SegmentBarChartProps> = ({ data, bars, categoryK
         );
     }
 
-    // Truncate category names for mobile
     const formatCategoryName = (value: string) => {
         if (isMobile && value.length > 15) {
             return `${value.substring(0, 13)}...`;
@@ -59,16 +51,13 @@ const SegmentBarChart: React.FC<SegmentBarChartProps> = ({ data, bars, categoryK
         return value;
     };
 
-    // Estimate bottom margin needed for category labels on Y-axis
     const longestLabelLength = data.reduce((max, item) => Math.max(max, String(item[categoryKey]).length), 0);
-    const yAxisWidth = Math.min(300, Math.max(100, isMobile ? 100 : longestLabelLength * 6 + 20)); // Smaller on mobile
+    const yAxisWidth = Math.min(300, Math.max(100, isMobile ? 100 : longestLabelLength * 6 + 20));
 
-    // Adjust chart height based on device and data
     const baseHeight = isMobile ? 350 : 200;
     const itemHeight = isMobile ? 20 : 10;
     const chartHeight = baseHeight + data.length * bars.length * itemHeight;
 
-    // Custom tooltip component with theme matching
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
             return (
@@ -94,7 +83,7 @@ const SegmentBarChart: React.FC<SegmentBarChartProps> = ({ data, bars, categoryK
                 <ResponsiveContainer width="100%" height={chartHeight}>
                     <BarChart
                         data={data}
-                        layout="vertical" // Horizontal bars
+                        layout="vertical"
                         margin={{
                             top: isMobile ? 10 : 20,
                             right: isMobile ? 5 : 30,
@@ -116,7 +105,7 @@ const SegmentBarChart: React.FC<SegmentBarChartProps> = ({ data, bars, categoryK
                             dataKey={categoryKey}
                             type="category"
                             width={yAxisWidth}
-                            interval={0} // Show all labels
+                            interval={0}
                             tick={{
                                 fill: 'var(--foreground)',
                                 fontSize: isMobile ? 10 : 12
@@ -132,7 +121,6 @@ const SegmentBarChart: React.FC<SegmentBarChartProps> = ({ data, bars, categoryK
                                 fontSize: isMobile ? '10px' : '12px'
                             }}
                             formatter={(value: string) => {
-                                // Shorten legend text on mobile
                                 if (isMobile) {
                                     const parts = value.split(' ');
                                     return <span className="text-foreground text-xs">{parts[0]}</span>;
@@ -153,7 +141,6 @@ const SegmentBarChart: React.FC<SegmentBarChartProps> = ({ data, bars, categoryK
                 </ResponsiveContainer>
             </div>
 
-            {/* Mobile-friendly legends for long labels */}
             {isMobile && data.some(item => String(item[categoryKey]).length > 15) && (
                 <div className="mt-2 bg-secondary/30 p-1 md:p-2 rounded-md text-xs">
                     <p className="font-medium text-foreground mb-1 px-1">Full Labels:</p>

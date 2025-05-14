@@ -25,7 +25,6 @@ export function ThemeProvider({
     useEffect(() => {
         const root = window.document.documentElement;
 
-        // Remove previous theme classes
         root.classList.remove('light', 'dark');
 
         if (theme === 'system') {
@@ -40,7 +39,6 @@ export function ThemeProvider({
         root.classList.add(theme);
     }, [theme]);
 
-    // Listen to system theme change
     useEffect(() => {
         if (theme !== 'system') return;
 
@@ -57,7 +55,6 @@ export function ThemeProvider({
         return () => mediaQuery.removeEventListener('change', handleChange);
     }, [theme]);
 
-    // Initialize theme from localStorage if available
     useEffect(() => {
         const savedTheme = localStorage.getItem('theme') as Theme | null;
         if (savedTheme) {

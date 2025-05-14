@@ -8,7 +8,6 @@ export function ThemeToggle() {
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
 
-    // Only show the theme toggle once component is mounted to avoid hydration mismatch
     useEffect(() => {
         setMounted(true);
     }, []);

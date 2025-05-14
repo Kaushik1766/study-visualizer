@@ -7,7 +7,6 @@ import { FiBarChart2, FiPieChart, FiAlertCircle } from 'react-icons/fi';
 interface ChartDataItem {
     name: string;
     value: number;
-    // Allow any other properties for more complex charts like grouped/stacked
     [key: string]: any;
 }
 
@@ -15,18 +14,14 @@ interface StudyChartProps {
     data: ChartDataItem[];
     chartType: 'bar' | 'pie' | 'groupedBar' | 'stackedBar';
     title?: string;
-    // For grouped/stacked bar charts
-    barKeys?: { key: string; color?: string; name?: string }[]; // Corrected to be an array
-    // For pie charts
+    barKeys?: { key: string; color?: string; name?: string }[];
     pieDataKey?: string;
-    // For bar charts
     barDataKey?: string;
     layout?: 'horizontal' | 'vertical';
     aspectRatio?: number;
     showLegend?: boolean;
     showTooltip?: boolean;
     showGrid?: boolean;
-    // Custom colors for pie chart
     pieColors?: string[];
 }
 
@@ -36,19 +31,16 @@ const renderCustomizedLabel = (props: any) => {
     const { x, y, width, height, value, name } = props;
     const radius = 10;
 
-    // Check if value is a number and not too small to display
     if (typeof value !== 'number' || value < 1) return null;
 
-
-    // Simple label inside for pie, more complex for bar if needed
-    if (props.cx) { // Pie chart label (cx exists for pie)
+    if (props.cx) {
         const RADIAN = Math.PI / 180;
         const { cx, cy, midAngle, innerRadius, outerRadius, percent, index } = props;
         const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
         const xLabel = cx + radius * Math.cos(-midAngle * RADIAN);
         const yLabel = cy + radius * Math.sin(-midAngle * RADIAN);
 
-        if (percent < 0.05) return null; // Don't render label for very small slices
+        if (percent < 0.05) return null;
 
         return (
             <text
@@ -65,8 +57,7 @@ const renderCustomizedLabel = (props: any) => {
         );
     }
 
-    // For bar chart, position label inside the bar
-    if (width < 20 || height < 15) return null; // Don't render if bar is too small
+    if (width < 20 || height < 15) return null;
 
     return (
         <text x={x + width / 2} y={y + height / 2} fill="#fff" textAnchor="middle" dominantBaseline="middle" fontSize="10px">
@@ -165,7 +156,7 @@ const StudyChart: React.FC<StudyChartProps> = ({
                 {chartType === 'bar' || chartType === 'groupedBar' || chartType === 'stackedBar' ? <FiBarChart2 className="mr-2 text-indigo-500" /> : <FiPieChart className="mr-2 text-indigo-500" />}
                 {title}
             </h3>}
-            <div style={{ width: '100%', flexGrow: 1, minHeight: 250 }}> {/* Ensure container has height */}
+            <div style={{ width: '100%', flexGrow: 1, minHeight: 250 }}>
                 <ResponsiveContainer width="100%" height="100%" aspect={aspectRatio}>
                     {chartContent()}
                 </ResponsiveContainer>
@@ -176,7 +167,6 @@ const StudyChart: React.FC<StudyChartProps> = ({
 
 export default StudyChart;
 
-// Helper function to generate chart data for "Base Values"
 export const prepareBaseValuesChartData = (baseValues: Record<string, string | number | null | undefined>, valueKeys?: string[]): ChartDataItem[] => {
     if (!baseValues) return [];
     return Object.entries(baseValues)
@@ -185,10 +175,9 @@ export const prepareBaseValuesChartData = (baseValues: Record<string, string | n
             name: key,
             value: value as number,
         }))
-        .sort((a: ChartDataItem, b: ChartDataItem) => b.value - a.value); // Sort by value descending
+        .sort((a: ChartDataItem, b: ChartDataItem) => b.value - a.value);
 };
 
-// Helper function to generate chart data for question options (Total counts)
 export const prepareQuestionOptionsChartData = (questions: any[], questionText: string): ChartDataItem[] => {
     const question = questions?.find(q => q.Question === questionText);
     if (!question || !question.options) return [];
@@ -201,23 +190,19 @@ export const prepareQuestionOptionsChartData = (questions: any[], questionText: 
         .sort((a: ChartDataItem, b: ChartDataItem) => b.value - a.value);
 };
 
-// Helper function to generate chart data for grouped/stacked bar charts (e.g., Market Segments or Age/Gender breakdowns)
 export const prepareGroupedBarChartData = (
     question: any,
-    groupKeys: { key: string; name: string; color?: string }[], // Made color optional here as well
-    optionValuePath?: string // Path to the value within option object, e.g. "Mindset A" or "Age Segments.18-24"
+    groupKeys: { key: string; name: string; color?: string }[],
+    optionValuePath?: string
 ): ChartDataItem[] => {
     if (!question || !question.options || !groupKeys || groupKeys.length === 0) return [];
 
     return question.options.map((option: any) => {
-        const dataItem: ChartDataItem = { name: option.optiontext, value: 0 }; // Initialize value, will be overwritten by specific group keys
+        const dataItem: ChartDataItem = { name: option.optiontext, value: 0 };
         groupKeys.forEach(group => {
-            // Access nested values if optionValuePath is used, otherwise direct access
-            let val = option[group.key]; // Direct access for simple cases like Market Segments
+            let val = option[group.key];
 
-            if (optionValuePath) { // For nested structures like Age Segments
-                // e.g. optionValuePath = "Age Segments", group.key = "18-24"
-                // then val = option["Age Segments"]["18-24"]
+            if (optionValuePath) {
                 const pathParts = optionValuePath.split('.');
                 let currentVal = option;
                 for (const part of pathParts) {
@@ -231,16 +216,11 @@ export const prepareGroupedBarChartData = (
                 if (currentVal && typeof currentVal === 'object' && group.key in currentVal) {
                     val = currentVal[group.key];
                 } else if (typeof currentVal === 'object' && !(group.key in currentVal) && optionValuePath === group.key) {
-                    // This case is for when group.key itself is the path to the object containing values
-                    // and we need to extract all its sub-keys for the chart.
-                    // This is more complex and might need a different data prep function.
-                    // For now, we assume group.key is a direct property or a sub-property of optionValuePath
-                    val = undefined; // Or handle as 0
+                    val = undefined;
                 } else {
                     val = undefined;
                 }
             }
-
 
             dataItem[group.key] = (typeof val === 'number' || (typeof val === 'string' && !isNaN(parseFloat(val)))) ? Number(val) : 0;
         });

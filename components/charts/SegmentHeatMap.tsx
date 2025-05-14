@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { ResponsiveContainer, Tooltip, XAxis, YAxis, Rectangle, ScatterChart, Scatter } from 'recharts';
 
 interface HeatMapDataPoint {
-    x: string; // Category/option
-    y: string; // Segment name
-    value: number; // The heat value
-    color: string; // Color based on the value intensity
+    x: string;
+    y: string;
+    value: number;
+    color: string;
 }
 
 interface SegmentHeatMapProps {
@@ -16,7 +16,6 @@ interface SegmentHeatMapProps {
     yAxisTitle?: string;
 }
 
-// Updated color range for better contrast
 const defaultColorRange = [
     '#e0f2fc', '#c4e4f6', '#99cce8', '#6badd9', '#4f91c8', '#3e74b3', '#2a58a5', '#163e8e', '#082776'
 ];
@@ -35,30 +34,22 @@ const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
     const [maxValue, setMaxValue] = useState<number>(0);
     const [isMobile, setIsMobile] = useState(false);
 
-    // Check for mobile view on mount and window resize
     useEffect(() => {
         const checkMobile = () => {
             setIsMobile(window.innerWidth < 768);
         };
 
-        // Initial check
         checkMobile();
-
-        // Add resize listener
         window.addEventListener('resize', checkMobile);
-
-        // Clean up
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
     useEffect(() => {
         if (!data || data.length === 0) return;
 
-        // Extract unique X and Y values
         const xValues = [...new Set(data.map(item => item.x))];
         const yValues = [...new Set(data.map(item => item.y))];
 
-        // Find min and max values
         const values = data.map(d => d.value);
         const min = Math.min(...values);
         const max = Math.max(...values);
@@ -74,21 +65,17 @@ const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
         return <p className="text-sm text-center text-foreground py-4">No data available to display heatmap for this section.</p>;
     }
 
-    // Custom formatter for X-axis labels to truncate long text
     const formatXAxisTick = (value: string) => {
-        // On mobile, use numbers that reference the index
         if (isMobile) {
             const index = uniqueXValues.findIndex(x => x === value) + 1;
             return `${index}`;
         }
-        // On desktop, truncate if too long
         if (value.length > 15) {
             return `${value.substring(0, 13)}...`;
         }
         return value;
     };
 
-    // Custom formatter for Y-axis labels to truncate long text
     const formatYAxisTick = (value: string) => {
         if (isMobile && value.length > 10) {
             return `${value.substring(0, 8)}...`;
@@ -96,7 +83,6 @@ const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
         return value;
     };
 
-    // Custom shape for each cell in the heatmap
     const CustomizedShape = (props: any) => {
         const { cx, cy, payload } = props;
         const cellSize = isMobile ? 12 : 30;
@@ -115,7 +101,6 @@ const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
         );
     };
 
-    // Custom tooltip for the heatmap
     const CustomTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
             const data = payload[0].payload;
@@ -129,14 +114,12 @@ const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
         return null;
     };
 
-    // Calculate height based on device and number of segments
     const mobileBaseHeight = 350;
     const desktopBaseHeight = 450;
     const chartHeight = isMobile
-        ? Math.max(mobileBaseHeight, uniqueYValues.length * 25)  // Smaller cell height on mobile
+        ? Math.max(mobileBaseHeight, uniqueYValues.length * 25)
         : Math.max(desktopBaseHeight, uniqueYValues.length * 50);
 
-    // Create a legend with color scale
     const renderColorLegend = () => {
         return (
             <div className="flex flex-col items-center mt-2 md:mt-4 bg-secondary/30 py-1 md:py-2 rounded-md">
@@ -161,9 +144,7 @@ const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
         );
     };
 
-    // Create reference key for X-axis labels (especially for mobile)
     const renderFullTextLegend = () => {
-        // Show for all mobile views or when we have truncated desktop labels
         if ((isMobile && uniqueXValues.length > 0) || uniqueXValues.some(x => x.length > 15)) {
             return (
                 <div className="mt-2 bg-secondary/30 p-1 md:p-2 rounded-md text-xs">
@@ -195,7 +176,7 @@ const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
                             top: isMobile ? 10 : 20,
                             right: isMobile ? 5 : 50,
                             bottom: isMobile ? 10 : 20,
-                            left: isMobile ? 60 : 180, // Less space for Y-axis on mobile
+                            left: isMobile ? 60 : 180,
                         }}
                     >
                         <XAxis

@@ -24,7 +24,7 @@ export function useSegmentColumns(
         if (activeSegmentConfig.isMindsetSubTab && getSegmentDisplayName(activeSegmentConfig.parentKey) === 'Market Segments') {
             const match = currentTabName.match(/Mindset (\d+) of (\d+)/);
             if (match) {
-                const seriesMax = match[2]; // "2" or "3" from "Mindset X of Y"
+                const seriesMax = match[2];
                 const relevantMindsetKeys = Object.keys(parentBaseValues)
                     .filter(key => {
                         const keyMatch = key.match(/Mindset (\d+) of (\d+)/);
@@ -36,7 +36,7 @@ export function useSegmentColumns(
                     count: parentBaseValues[key] as number || 0
                 })).sort((a, b) => a.header.localeCompare(b.header));
             }
-            // Fallback for a mindset sub-tab that doesn't match the pattern
+
             const count = parentBaseValues[currentTabName];
             if (count !== undefined && count !== null) {
                 return [{ header: currentTabName, count: count as number || 0 }];

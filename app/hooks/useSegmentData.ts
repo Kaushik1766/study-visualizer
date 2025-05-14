@@ -83,7 +83,7 @@ export function useSegmentData(
     const activeSegmentData: Segment | undefined = useMemo(() => {
         if (!study || !activeSegmentKey || !displayableSegments) return undefined;
         const currentSegmentConfig = displayableSegments.find(s => s.key === activeSegmentKey);
-        const dataKey = currentSegmentConfig?.parentKey; // Always use parentKey from config
+        const dataKey = currentSegmentConfig?.parentKey;
         if (!dataKey) return undefined;
         return study.studyData[dataKey];
     }, [study, activeSegmentKey, displayableSegments]);
@@ -109,30 +109,25 @@ export function useSegmentData(
                     setActiveSegmentKey(targetInNewSegments.key);
                     keySetFromTarget = true;
                 }
-                setTargetSegmentName(null); // Consume the target name
+                setTargetSegmentName(null);
             }
 
             if (!keySetFromTarget) {
-                // This block now handles initial load, or if targetSegmentName didn't match,
-                // or if activeSegmentKey is invalid for current segments for other reasons.
                 const currentSegmentStillValid = activeSegmentKey && displayableSegments.some(s => s.key === activeSegmentKey);
                 if (!currentSegmentStillValid) {
                     const overallSegment = displayableSegments.find(s => s.name === "Overall");
                     if (overallSegment) {
                         setActiveSegmentKey(overallSegment.key);
                     } else if (displayableSegments.length > 0) {
-                        // Default to the first segment if "Overall" is not found
                         setActiveSegmentKey(displayableSegments[0].key);
                     } else {
-                        // This case should ideally not be reached if displayableSegments.length > 0
                         setActiveSegmentKey(null);
                     }
                 }
             }
         } else {
-            // No displayable segments, so no active key
             setActiveSegmentKey(null);
-            if (targetSegmentName) { // Clear target if no segments available
+            if (targetSegmentName) {
                 setTargetSegmentName(null);
             }
         }
@@ -140,16 +135,13 @@ export function useSegmentData(
 
     const handleViewModeChange = (mode: ActiveViewModeType) => {
         if (activeSegmentKey) {
-            // Find the name of the current segment from the current displayableSegments list
             const currentActiveSegmentInfo = displayableSegments.find(s => s.key === activeSegmentKey);
             if (currentActiveSegmentInfo) {
                 setTargetSegmentName(currentActiveSegmentInfo.name);
             } else {
-                // Fallback if current activeSegmentKey isn't found (should be rare)
                 setTargetSegmentName("Overall");
             }
         } else {
-            // If no segment is currently active, target "Overall" by default for the new view
             setTargetSegmentName("Overall");
         }
         return mode;
