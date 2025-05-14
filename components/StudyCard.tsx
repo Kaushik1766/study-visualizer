@@ -83,7 +83,7 @@ const StudyCard: React.FC<StudyCardProps> = ({
                 <div className="pt-2">
                     <button
                         onClick={handleCardClick}
-                        className="btn btn-primary w-full text-sm flex items-center justify-center gap-2"
+                        className="btn btn-primary w-full text-sm flex items-center justify-center gap-2 cursor-pointer"
                     >
                         View Details
                         <FiExternalLink className="w-4 h-4" />
