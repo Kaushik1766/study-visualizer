@@ -2,30 +2,28 @@ import React from 'react';
 import { Segment, Question, Option } from '@/types/StudyResponse';
 import SegmentBarChart, { barColors } from '@/components/charts/SegmentBarChart';
 import SegmentHeatMap from '@/components/charts/SegmentHeatMap';
+import { getSegmentDisplayName } from '@/app/utils/segmentUtils';
+import { SegmentConfig, SegmentColumn, DisplayPreferenceType } from '@/app/hooks/useSegmentData';
 
-interface SegmentColumn {
-    header: string;
-    count: number;
-}
+// Helper type for segment data
+type SegmentData = { [key: string]: number };
 
 interface SegmentDataDisplayProps {
     activeSegmentKey: string | null;
     activeSegmentData?: Segment;
-    activeSegmentConfig: { key: string; name: string; parentKey: string; isMindsetSubTab: boolean } | null;
-    getSegmentDisplayName: (key: string) => string;
+    activeSegmentConfig: SegmentConfig | null;
     marketSegmentColumns: SegmentColumn[];
     ageDemographicColumns: SegmentColumn[];
     prelimSpecificAgeColumns: SegmentColumn[];
     genderDemographicColumns: SegmentColumn[];
     prelimColumns: SegmentColumn[];
-    activeDisplayPreference: 'table' | 'chart' | 'heatmap';
+    activeDisplayPreference: DisplayPreferenceType;
 }
 
 const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
     activeSegmentKey,
     activeSegmentData,
     activeSegmentConfig,
-    getSegmentDisplayName,
     marketSegmentColumns,
     ageDemographicColumns,
     prelimSpecificAgeColumns,
@@ -37,7 +35,7 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
         return <p className="text-center text-gray-500 py-10">Select a segment tab to view its data.</p>;
     }
 
-    const segmentDisplayName = getSegmentDisplayName(activeSegmentKey || "");
+    const segmentDisplayName = activeSegmentKey ? getSegmentDisplayName(activeSegmentKey) : "";
     const isMarketSegmentsView = activeSegmentConfig?.isMindsetSubTab || segmentDisplayName === 'Market Segments';
 
     const getColorForValue = (value: number, minValue: number, maxValue: number) => {
@@ -78,8 +76,10 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
                     value = option.Total;
                 } else {
                     const genericSegmentKey = `${dataKeyPrefix} Segments`;
-                    if (option[genericSegmentKey]) {
-                        value = option[genericSegmentKey]?.[col.header];
+                    // Type assertion for dynamic segment access
+                    const segmentData = option[genericSegmentKey] as SegmentData | undefined;
+                    if (segmentData) {
+                        value = segmentData[col.header];
                     }
                 }
                 dataPoint[col.header] = (typeof value === 'number' || (typeof value === 'string' && !isNaN(parseFloat(value)))) ? Number(value) : 0;
@@ -143,8 +143,10 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
                     allValues.push(value);
                 } else {
                     const genericSegmentKey = `${dataKeyPrefix} Segments`;
-                    if (option[genericSegmentKey]) {
-                        const val = option[genericSegmentKey]?.[col.header];
+                    // Type assertion for dynamic segment access
+                    const segmentData = option[genericSegmentKey] as SegmentData | undefined;
+                    if (segmentData) {
+                        const val = segmentData[col.header];
                         if (typeof val === 'number' || (typeof val === 'string' && !isNaN(parseFloat(val)))) {
                             value = Number(val);
                             allValues.push(value);
@@ -197,8 +199,10 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
                     valueFound = true;
                 } else {
                     const genericSegmentKey = `${dataKeyPrefix} Segments`;
-                    if (option[genericSegmentKey]) {
-                        const val = option[genericSegmentKey]?.[col.header];
+                    // Type assertion for dynamic segment access
+                    const segmentData = option[genericSegmentKey] as SegmentData | undefined;
+                    if (segmentData) {
+                        const val = segmentData[col.header];
                         if (typeof val === 'number' || (typeof val === 'string' && !isNaN(parseFloat(val)))) {
                             value = Number(val);
                             valueFound = true;
@@ -273,6 +277,7 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
                         </div>
                     ))}
 
+                    {/* Display for non-market segments data */}
                     {!isMarketSegmentsView && activeSegmentData.Data?.Questions?.map((question: Question, qIndex: number) => {
                         if (segmentDisplayName === 'Age') {
                             return (

@@ -53,6 +53,7 @@ export interface Option {
     'Gender Segments'?: { [key: string]: number };
     Mindsets?: Array<{ [key: string]: number }>;
     'Prelim-Answer Segments'?: PrelimAnswerSegment[];
+    [key: string]: string | number | { [key: string]: number } | Array<{ [key: string]: number }> | PrelimAnswerSegment[] | undefined;
 }
 
 export interface PrelimAnswerSegment {
