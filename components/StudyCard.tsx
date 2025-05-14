@@ -22,7 +22,6 @@ const StudyCard: React.FC<StudyCardProps> = ({
     const createdDate = study.studyStarted ? new Date(study.studyStarted).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' }) : 'N/A';
     const endDate = study.studyEnded ? new Date(study.studyEnded).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' }) : 'Ongoing';
 
-    // Calculate study duration in days
     const durationDays = study.studyStarted && study.studyEnded ?
         Math.ceil((new Date(study.studyEnded).getTime() - new Date(study.studyStarted).getTime()) / (1000 * 60 * 60 * 24)) :
         null;
@@ -34,7 +33,6 @@ const StudyCard: React.FC<StudyCardProps> = ({
     return (
         <div className="card bg-card border border-border hover:border-primary/50 p-6 transition-all">
             <div className="flex flex-col justify-between h-full space-y-4">
-                {/* Header with title and menu */}
                 <div className="flex justify-between items-start">
                     <h3 className="text-xl font-semibold text-foreground/90 line-clamp-2">
                         {study.studyTitle}
@@ -46,7 +44,6 @@ const StudyCard: React.FC<StudyCardProps> = ({
                     </div>
                 </div>
 
-                {/* Status and date info */}
                 <div className="flex flex-wrap items-center gap-2 text-xs">
                     <span className={`badge flex items-center ${badgeClass}`}>
                         {IconComponent && <IconComponent className="w-3.5 h-3.5 mr-1" />}
@@ -61,12 +58,10 @@ const StudyCard: React.FC<StudyCardProps> = ({
                     )}
                 </div>
 
-                {/* Description with truncation */}
                 <p className="text-sm text-muted-foreground line-clamp-2">
-                    {study.studyObjective || "No description available for this study."}
+                    {"No description available for this study."}
                 </p>
 
-                {/* Tags */}
                 {study.studyKeywords && study.studyKeywords.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                         {study.studyKeywords.slice(0, 3).map((keyword) => (
@@ -85,7 +80,6 @@ const StudyCard: React.FC<StudyCardProps> = ({
                     </div>
                 )}
 
-                {/* Action button */}
                 <div className="pt-2">
                     <button
                         onClick={handleCardClick}

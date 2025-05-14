@@ -7,9 +7,16 @@ interface StudyDetailHeaderProps {
     overallBaseSize: number;
     formatDate: (dateString: string | null | undefined) => string;
     onBack: () => void;
+    studyObjective?: string;
 }
 
-const StudyDetailHeader: React.FC<StudyDetailHeaderProps> = ({ study, overallBaseSize, formatDate, onBack }) => {
+const StudyDetailHeader: React.FC<StudyDetailHeaderProps> = ({
+    study,
+    overallBaseSize,
+    formatDate,
+    onBack,
+    studyObjective
+}) => {
     return (
         <>
             {/* <button
@@ -57,10 +64,10 @@ const StudyDetailHeader: React.FC<StudyDetailHeaderProps> = ({ study, overallBas
                     </div>
                 </div>
 
-                {study.studyObjective && (
+                {studyObjective && (
                     <div className="mt-4 bg-secondary/50 rounded-lg p-4">
                         <h3 className="text-sm font-medium mb-1">Study Objective</h3>
-                        <p className="text-sm text-foreground">{study.studyObjective}</p>
+                        <p className="text-sm text-foreground">{studyObjective}</p>
                     </div>
                 )}
             </header>
