@@ -1,6 +1,7 @@
 import React from 'react';
 import { Segment, Question, Option } from '@/types/StudyResponse';
 import SegmentBarChart, { barColors } from '@/components/charts/SegmentBarChart';
+import SegmentHeatMap from '@/components/charts/SegmentHeatMap';
 
 interface SegmentColumn {
     header: string;
@@ -17,7 +18,7 @@ interface SegmentDataDisplayProps {
     prelimSpecificAgeColumns: SegmentColumn[];
     genderDemographicColumns: SegmentColumn[];
     prelimColumns: SegmentColumn[];
-    activeDisplayPreference: 'table' | 'chart';
+    activeDisplayPreference: 'table' | 'chart' | 'heatmap';
 }
 
 const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
@@ -38,6 +39,19 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
 
     const segmentDisplayName = getSegmentDisplayName(activeSegmentKey || "");
     const isMarketSegmentsView = activeSegmentConfig?.isMindsetSubTab || segmentDisplayName === 'Market Segments';
+
+    const getColorForValue = (value: number, minValue: number, maxValue: number) => {
+        const colors = [
+            '#f7fbff', '#deebf7', '#c6dbef', '#9ecae1', '#6baed6', '#4292c6', '#2171b5', '#08519c', '#08306b'
+        ];
+
+        if (minValue === maxValue) return colors[Math.floor(colors.length / 2)];
+
+        const normalizedValue = (value - minValue) / (maxValue - minValue) * (colors.length - 1);
+        const colorIndex = Math.floor(normalizedValue);
+
+        return colors[Math.min(colorIndex, colors.length - 1)];
+    };
 
     const transformDataForChart = (question: Question, relevantColumns: SegmentColumn[], dataKeyPrefix: string) => {
         if (!question.options || question.options.length === 0 || relevantColumns.length === 0) {
@@ -78,6 +92,130 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
         }));
 
         return { chartData, bars };
+    };
+
+    const transformDataForHeatmap = (question: Question, relevantColumns: SegmentColumn[], dataKeyPrefix: string) => {
+        if (!question.options || question.options.length === 0 || relevantColumns.length === 0) {
+            return { heatmapData: [] };
+        }
+
+        const allValues: number[] = [];
+        const heatmapData = [];
+
+        for (const option of question.options) {
+            for (const col of relevantColumns) {
+                let value: number = 0;
+
+                if (isMarketSegmentsView && option.Mindsets && Array.isArray(option.Mindsets)) {
+                    const mindsetObject = option.Mindsets.find(m => m && typeof m === 'object' && m.hasOwnProperty(col.header));
+                    if (mindsetObject) {
+                        const val = mindsetObject[col.header];
+                        if (typeof val === 'number' || (typeof val === 'string' && !isNaN(parseFloat(val)))) {
+                            value = Number(val);
+                            allValues.push(value);
+                        }
+                    }
+                } else if (segmentDisplayName === 'Age' && option["Age Segments"]) {
+                    const val = option["Age Segments"]?.[col.header];
+                    if (typeof val === 'number' || (typeof val === 'string' && !isNaN(parseFloat(val)))) {
+                        value = Number(val);
+                        allValues.push(value);
+                    }
+                } else if (segmentDisplayName === 'Prelim' && option["Prelim-Answer Segments"] && Array.isArray(option["Prelim-Answer Segments"])) {
+                    const prelimSegment = option["Prelim-Answer Segments"].find(s => s && typeof s === 'object' && s.hasOwnProperty(col.header));
+                    if (prelimSegment) {
+                        const val = prelimSegment[col.header];
+                        if (typeof val === 'number' || (typeof val === 'string' && !isNaN(parseFloat(val)))) {
+                            value = Number(val);
+                            allValues.push(value);
+                        }
+                    }
+                } else if (segmentDisplayName === 'Gender' && option["Gender Segments"]) {
+                    const val = option["Gender Segments"]?.[col.header];
+                    if (typeof val === 'number' || (typeof val === 'string' && !isNaN(parseFloat(val)))) {
+                        value = Number(val);
+                        allValues.push(value);
+                    }
+                } else if (option.Total !== undefined && relevantColumns.length === 1 && relevantColumns[0].header === "Total") {
+                    value = Number(option.Total);
+                    allValues.push(value);
+                } else {
+                    const genericSegmentKey = `${dataKeyPrefix} Segments`;
+                    if (option[genericSegmentKey]) {
+                        const val = option[genericSegmentKey]?.[col.header];
+                        if (typeof val === 'number' || (typeof val === 'string' && !isNaN(parseFloat(val)))) {
+                            value = Number(val);
+                            allValues.push(value);
+                        }
+                    }
+                }
+            }
+        }
+
+        const minValue = allValues.length > 0 ? Math.min(...allValues) : 0;
+        const maxValue = allValues.length > 0 ? Math.max(...allValues) : 0;
+
+        for (const option of question.options) {
+            for (const col of relevantColumns) {
+                let value: number = 0;
+                let valueFound = false;
+
+                if (isMarketSegmentsView && option.Mindsets && Array.isArray(option.Mindsets)) {
+                    const mindsetObject = option.Mindsets.find(m => m && typeof m === 'object' && m.hasOwnProperty(col.header));
+                    if (mindsetObject) {
+                        const val = mindsetObject[col.header];
+                        if (typeof val === 'number' || (typeof val === 'string' && !isNaN(parseFloat(val)))) {
+                            value = Number(val);
+                            valueFound = true;
+                        }
+                    }
+                } else if (segmentDisplayName === 'Age' && option["Age Segments"]) {
+                    const val = option["Age Segments"]?.[col.header];
+                    if (typeof val === 'number' || (typeof val === 'string' && !isNaN(parseFloat(val)))) {
+                        value = Number(val);
+                        valueFound = true;
+                    }
+                } else if (segmentDisplayName === 'Prelim' && option["Prelim-Answer Segments"] && Array.isArray(option["Prelim-Answer Segments"])) {
+                    const prelimSegment = option["Prelim-Answer Segments"].find(s => s && typeof s === 'object' && s.hasOwnProperty(col.header));
+                    if (prelimSegment) {
+                        const val = prelimSegment[col.header];
+                        if (typeof val === 'number' || (typeof val === 'string' && !isNaN(parseFloat(val)))) {
+                            value = Number(val);
+                            valueFound = true;
+                        }
+                    }
+                } else if (segmentDisplayName === 'Gender' && option["Gender Segments"]) {
+                    const val = option["Gender Segments"]?.[col.header];
+                    if (typeof val === 'number' || (typeof val === 'string' && !isNaN(parseFloat(val)))) {
+                        value = Number(val);
+                        valueFound = true;
+                    }
+                } else if (option.Total !== undefined && relevantColumns.length === 1 && relevantColumns[0].header === "Total") {
+                    value = Number(option.Total);
+                    valueFound = true;
+                } else {
+                    const genericSegmentKey = `${dataKeyPrefix} Segments`;
+                    if (option[genericSegmentKey]) {
+                        const val = option[genericSegmentKey]?.[col.header];
+                        if (typeof val === 'number' || (typeof val === 'string' && !isNaN(parseFloat(val)))) {
+                            value = Number(val);
+                            valueFound = true;
+                        }
+                    }
+                }
+
+                if (valueFound) {
+                    heatmapData.push({
+                        x: option.optiontext,
+                        y: col.header,
+                        value,
+                        color: getColorForValue(value, minValue, maxValue)
+                    });
+                }
+            }
+        }
+
+        return { heatmapData };
     };
 
     return (
@@ -265,7 +403,7 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
                         }
                     })}
                 </div>
-            ) : (
+            ) : activeDisplayPreference === 'chart' ? (
                 <div className="space-y-8">
                     {activeSegmentData.Data?.Questions?.map((question: Question, qIndex: number) => {
                         let relevantColumns: SegmentColumn[] = [];
@@ -305,6 +443,48 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
                     })}
                     {(!activeSegmentData.Data?.Questions || activeSegmentData.Data.Questions.length === 0) && (
                         <p className="text-center text-gray-500 py-10">No questions available to display charts for this segment.</p>
+                    )}
+                </div>
+            ) : (
+                <div className="space-y-8">
+                    {activeSegmentData.Data?.Questions?.map((question: Question, qIndex: number) => {
+                        let relevantColumns: SegmentColumn[] = [];
+                        let dataKeyPrefix = "";
+
+                        if (isMarketSegmentsView) {
+                            relevantColumns = marketSegmentColumns;
+                            dataKeyPrefix = "Mindsets";
+                        } else if (segmentDisplayName === 'Age') {
+                            relevantColumns = ageDemographicColumns;
+                            dataKeyPrefix = "Age";
+                        } else if (segmentDisplayName === 'Prelim') {
+                            relevantColumns = prelimColumns;
+                            dataKeyPrefix = "Prelim-Answer";
+                        } else if (segmentDisplayName === 'Gender') {
+                            relevantColumns = genderDemographicColumns;
+                            dataKeyPrefix = "Gender";
+                        } else {
+                            if (question.options?.some(opt => opt.Total !== undefined)) {
+                                relevantColumns = [{ header: "Total", count: activeSegmentData.Data?.["Base Size"] || 0 }];
+                                dataKeyPrefix = segmentDisplayName;
+                            }
+                        }
+
+                        const { heatmapData } = transformDataForHeatmap(question, relevantColumns, dataKeyPrefix);
+
+                        return (
+                            <div key={`heatmap-q-${qIndex}`} className="border border-gray-200 rounded-lg p-4">
+                                <SegmentHeatMap
+                                    title={question.Question}
+                                    data={heatmapData}
+                                    xAxisTitle="Options"
+                                    yAxisTitle="Segments"
+                                />
+                            </div>
+                        );
+                    })}
+                    {(!activeSegmentData.Data?.Questions || activeSegmentData.Data.Questions.length === 0) && (
+                        <p className="text-center text-gray-500 py-10">No questions available to display heatmaps for this segment.</p>
                     )}
                 </div>
             )}
