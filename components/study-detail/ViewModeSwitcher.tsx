@@ -2,7 +2,7 @@ import React from 'react';
 import { FiTable, FiBarChart2, FiMap } from 'react-icons/fi';
 
 export type ActiveViewModeType = 'T' | 'B' | 'R';
-export type DisplayPreferenceType = 'table' | 'chart' | 'heatmap'; // Updated to include heatmap
+export type DisplayPreferenceType = 'table' | 'chart' | 'heatmap';
 
 interface ViewModeSwitcherProps {
     activeViewMode: ActiveViewModeType;
@@ -18,52 +18,49 @@ const ViewModeSwitcher: React.FC<ViewModeSwitcherProps> = ({
     onDisplayPreferenceChange
 }) => {
     return (
-        <div className="mb-6 bg-white shadow-md rounded-xl p-4 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center bg-secondary rounded-lg p-1">
                 <button
                     onClick={() => onDisplayPreferenceChange('table')}
-                    className={`p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors ${activeDisplayPreference === 'table' ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        }`}
+                    className={`p-2 rounded-md transition-colors ${activeDisplayPreference === 'table' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                     aria-pressed={activeDisplayPreference === 'table'}
                     title="Table View"
                 >
-                    <FiTable />
+                    <FiTable className="w-5 h-5" />
                 </button>
                 <button
                     onClick={() => onDisplayPreferenceChange('chart')}
-                    className={`p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors ${activeDisplayPreference === 'chart' ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        }`}
+                    className={`p-2 rounded-md transition-colors ${activeDisplayPreference === 'chart' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                     aria-pressed={activeDisplayPreference === 'chart'}
                     title="Bar Chart View"
                 >
-                    <FiBarChart2 />
+                    <FiBarChart2 className="w-5 h-5" />
                 </button>
                 <button
                     onClick={() => onDisplayPreferenceChange('heatmap')}
-                    className={`p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors ${activeDisplayPreference === 'heatmap' ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        }`}
+                    className={`p-2 rounded-md transition-colors ${activeDisplayPreference === 'heatmap' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                     aria-pressed={activeDisplayPreference === 'heatmap'}
                     title="Heat Map View"
                 >
-                    <FiMap />
+                    <FiMap className="w-5 h-5" />
                 </button>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
                 <button
                     onClick={() => onViewModeChange('T')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeViewMode === 'T' ? 'bg-gray-800 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${activeViewMode === 'T' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}
                 >
                     Top Down
                 </button>
                 <button
                     onClick={() => onViewModeChange('B')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeViewMode === 'B' ? 'bg-gray-800 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${activeViewMode === 'B' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}
                 >
                     Bottom Up
                 </button>
                 <button
                     onClick={() => onViewModeChange('R')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeViewMode === 'R' ? 'bg-gray-800 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${activeViewMode === 'R' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}
                 >
                     Response Time
                 </button>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiFileText, FiClipboard, FiArrowLeft } from 'react-icons/fi';
+import { FiFileText, FiClipboard, FiArrowLeft, FiCalendar, FiUsers } from 'react-icons/fi';
 import { StudyResponse } from '@/types/StudyResponse';
 
 interface StudyDetailHeaderProps {
@@ -19,19 +19,36 @@ const StudyDetailHeader: React.FC<StudyDetailHeaderProps> = ({ study, overallBas
                 <FiArrowLeft className="w-5 h-5 mr-2 text-indigo-500 group-hover:text-indigo-400" />
                 Back to Studies
             </button>
-            <header className="mb-6 bg-white shadow-lg rounded-xl p-6">
+            <header className="mb-6 bg-card border border-border rounded-xl p-6 shadow-sm">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
                     <div>
-                        <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">{study.studyTitle}</h1>
-                        <div className="flex flex-wrap text-sm text-gray-600 gap-x-4 gap-y-1">
-                            <span>Status: <span className="font-semibold text-gray-700">{study.studyStatus ? (study.studyStatus.toLowerCase().includes('completed') || study.studyStatus.includes('/') ? `Completed on: ${formatDate(study.studyStatus)}` : study.studyStatus) : 'N/A'}</span></span>
-                            <span>Surveys Started: <span className="font-semibold text-gray-700">{formatDate(study.studyStarted)}</span></span>
-                            <span>Surveys Completed: <span className="font-semibold text-gray-700">{study.studyRespondents} (out of {overallBaseSize})</span></span>
+                        <h1 className="text-2xl md:text-3xl font-bold mb-2">{study.studyTitle}</h1>
+                        <div className="flex flex-wrap text-sm text-muted-foreground gap-x-6 gap-y-2">
+                            <div className="flex items-center">
+                                <FiCalendar className="w-4 h-4 mr-2 text-primary" />
+                                <span>
+                                    {study.studyStatus ?
+                                        (study.studyStatus.toLowerCase().includes('completed') ||
+                                            study.studyStatus.includes('/') ?
+                                            `Completed on: ${formatDate(study.studyStatus)}` :
+                                            study.studyStatus) :
+                                        'N/A'
+                                    }
+                                </span>
+                            </div>
+                            <div className="flex items-center">
+                                <FiCalendar className="w-4 h-4 mr-2 text-primary" />
+                                <span>Started: {formatDate(study.studyStarted)}</span>
+                            </div>
+                            <div className="flex items-center">
+                                <FiUsers className="w-4 h-4 mr-2 text-primary" />
+                                <span>Respondents: {study.studyRespondents} / {overallBaseSize}</span>
+                            </div>
                         </div>
                         {study.studyKeywords && study.studyKeywords.length > 0 && (
-                            <div className="mt-3 flex flex-wrap gap-2">
+                            <div className="mt-4 flex flex-wrap gap-2">
                                 {study.studyKeywords.map((keyword) => (
-                                    <span key={keyword} className="bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full text-xs font-medium">
+                                    <span key={keyword} className="bg-secondary text-secondary-foreground px-2.5 py-1 rounded-full text-xs font-medium">
                                         {keyword}
                                     </span>
                                 ))}
@@ -39,14 +56,21 @@ const StudyDetailHeader: React.FC<StudyDetailHeaderProps> = ({ study, overallBas
                         )}
                     </div>
                     <div className="flex gap-3 mt-4 md:mt-0">
-                        <button className="inline-flex items-center px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50">
-                            <FiFileText className="w-4 h-4 mr-2 text-red-500" /> Export PDF
+                        <button className="btn btn-secondary inline-flex items-center gap-2">
+                            <FiFileText className="w-4 h-4 text-red-500" /> Export PDF
                         </button>
-                        <button className="inline-flex items-center px-4 py-2 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-700 bg-white hover:bg-blue-50">
-                            <FiClipboard className="w-4 h-4 mr-2 text-blue-500" /> Export PPTX
+                        <button className="btn btn-secondary inline-flex items-center gap-2">
+                            <FiClipboard className="w-4 h-4 text-blue-500" /> Export PPTX
                         </button>
                     </div>
                 </div>
+
+                {study.studyObjective && (
+                    <div className="mt-4 bg-secondary/50 rounded-lg p-4">
+                        <h3 className="text-sm font-medium mb-1">Study Objective</h3>
+                        <p className="text-sm text-muted-foreground">{study.studyObjective}</p>
+                    </div>
+                )}
             </header>
         </>
     );

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiAlertTriangle, FiArrowLeft } from 'react-icons/fi';
+import { FiAlertTriangle, FiArrowLeft, FiRefreshCw } from 'react-icons/fi';
 
 interface ErrorDisplayProps {
     errorMessage: string;
@@ -9,22 +9,35 @@ interface ErrorDisplayProps {
 
 const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ errorMessage, onRetry, showBackButton = true }) => {
     return (
-        <div className="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-red-600">
-            <FiAlertTriangle className="w-12 h-12 mb-4" />
-            <p className="text-xl font-semibold text-center">Error: {errorMessage}</p>
-            {onRetry && (
-                <button
-                    onClick={onRetry}
-                    className="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                    Try Again
-                </button>
-            )}
-            {showBackButton && (
-                <button onClick={() => window.history.back()} className="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
-                    <FiArrowLeft className="w-5 h-5 mr-2" /> Go Back
-                </button>
-            )}
+        <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center fade-in">
+            <div className="max-w-md w-full bg-card border border-border rounded-xl p-6 shadow-sm text-center">
+                <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FiAlertTriangle className="w-8 h-8" />
+                </div>
+                <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
+                <p className="text-muted-foreground mb-6">{errorMessage}</p>
+
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    {onRetry && (
+                        <button
+                            onClick={onRetry}
+                            className="btn btn-primary inline-flex items-center gap-2"
+                        >
+                            <FiRefreshCw className="w-4 h-4" />
+                            Try Again
+                        </button>
+                    )}
+                    {showBackButton && (
+                        <button
+                            onClick={() => window.history.back()}
+                            className="btn btn-secondary inline-flex items-center gap-2"
+                        >
+                            <FiArrowLeft className="w-4 h-4" />
+                            Go Back
+                        </button>
+                    )}
+                </div>
+            </div>
         </div>
     );
 };

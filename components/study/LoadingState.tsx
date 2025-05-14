@@ -7,8 +7,8 @@ interface LoadingStateProps {
 
 const LoadingState: React.FC<LoadingStateProps> = ({ message = "Loading study details..." }) => {
     return (
-        <div className="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-gray-900">
-            <FiLoader className="w-12 h-12 text-indigo-600 animate-spin mb-4" />
+        <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center fade-in">
+            <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
             <p className="text-xl font-semibold">{message}</p>
         </div>
     );
