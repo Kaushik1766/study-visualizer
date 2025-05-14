@@ -9,7 +9,7 @@ import LoadingState from '@/components/study/LoadingState';
 import ErrorDisplay from '@/components/study/ErrorDisplay';
 import StudyNotFound from '@/components/study/StudyNotFound';
 import StudyDetailHeader from '@/components/study-detail/StudyDetailHeader';
-import ViewModeSwitcher, { ActiveViewModeType } from '@/components/study-detail/ViewModeSwitcher';
+import ViewModeSwitcher, { ActiveViewModeType, DisplayPreferenceType } from '@/components/study-detail/ViewModeSwitcher';
 import SegmentTabs from '@/components/study-detail/SegmentTabs';
 import SegmentDataDisplay from '@/components/study-detail/SegmentDataDisplay';
 
@@ -28,7 +28,8 @@ const StudyDetailPage = () => {
     const { data: studies, isLoading, error } = useStudies();
     const [activeSegmentKey, setActiveSegmentKey] = useState<string | null>(null);
     const [activeViewMode, setActiveViewMode] = useState<ActiveViewModeType>('B');
-    const [targetSegmentName, setTargetSegmentName] = useState<string | null>(null); // Added state
+    const [targetSegmentName, setTargetSegmentName] = useState<string | null>(null);
+    const [activeDisplayPreference, setActiveDisplayPreference] = useState<DisplayPreferenceType>('table');
 
     const study = useMemo(() => {
         if (!studies || !studyId) return null;
@@ -266,6 +267,10 @@ const StudyDetailPage = () => {
         // setActiveSegmentKey(null); // This line was correctly removed in the previous attempt
     };
 
+    const handleDisplayPreferenceChange = (preference: DisplayPreferenceType) => {
+        setActiveDisplayPreference(preference);
+    };
+
     const formatDate = (dateString: string | null | undefined) => {
         if (!dateString) return 'N/A';
         try {
@@ -306,6 +311,8 @@ const StudyDetailPage = () => {
                 <ViewModeSwitcher
                     activeViewMode={activeViewMode}
                     onViewModeChange={handleViewModeChange}
+                    activeDisplayPreference={activeDisplayPreference}
+                    onDisplayPreferenceChange={handleDisplayPreferenceChange}
                 />
 
                 <SegmentTabs
@@ -322,8 +329,9 @@ const StudyDetailPage = () => {
                     marketSegmentColumns={marketSegmentColumns}
                     ageDemographicColumns={ageDemographicColumns}
                     prelimSpecificAgeColumns={prelimSpecificAgeColumns}
-                    prelimColumns={prelimColumns} // Added new prop
+                    prelimColumns={prelimColumns}
                     genderDemographicColumns={genderDemographicColumns}
+                    activeDisplayPreference={activeDisplayPreference}
                 />
 
                 <footer className="mt-12 text-center">
