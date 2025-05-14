@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react';
-import { FiSearch, FiTag, FiX } from 'react-icons/fi';
+import { FiSearch, FiTag, FiX, FiFilter, FiCalendar, FiRefreshCw } from 'react-icons/fi';
 
 interface FilterPanelProps {
     searchTerm: string;
@@ -29,22 +29,37 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     clearFilters,
 }) => {
     return (
-        <div className="md:w-72 lg:w-80 xl:w-96 bg-white p-6 shadow-lg rounded-xl space-y-6 h-fit sticky top-8">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6">Filters</h2>
+        <div className="md:w-72 lg:w-80 xl:w-96 bg-card p-6 border border-border rounded-xl space-y-6 h-fit sticky top-24 shadow-sm transition-all fade-in">
+            <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                    <FiFilter className="h-5 w-5 text-primary" aria-hidden="true" />
+                    <span>Filters</span>
+                </h2>
+                {(searchTerm || selectedTags.length > 0 || startDateFilter || endDateFilter) && (
+                    <button
+                        onClick={clearFilters}
+                        className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors"
+                        aria-label="Clear all filters"
+                    >
+                        <FiRefreshCw className="h-3.5 w-3.5" />
+                        <span>Reset</span>
+                    </button>
+                )}
+            </div>
 
-            <div>
-                <label htmlFor="search-study" className="block text-sm font-medium text-gray-700 mb-1.5">
+            <div className="space-y-2">
+                <label htmlFor="search-study" className="text-sm font-medium">
                     Search by Name
                 </label>
                 <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <FiSearch className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                        <FiSearch className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     </div>
                     <input
                         type="text"
                         name="search-study"
                         id="search-study"
-                        className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 pr-3 py-2 sm:text-sm border-gray-300 rounded-md shadow-sm text-gray-900"
+                        className="block w-full pl-10 pr-3 py-2 text-sm border border-border bg-background rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
                         placeholder="Enter study name..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -52,66 +67,76 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 </div>
             </div>
 
-            <div className="space-y-3">
-                <p className="block text-sm font-medium text-gray-700">Filter by Date</p>
-                <div>
-                    <label htmlFor="start-date" className="block text-xs font-medium text-gray-600 mb-1">
-                        Start Date
-                    </label>
-                    <input
-                        type="date"
-                        id="start-date"
-                        value={startDateFilter}
-                        onChange={(e) => setStartDateFilter(e.target.value)}
-                        className="focus:ring-indigo-500 focus:border-indigo-500 block w-full px-3 py-2 sm:text-sm border-gray-300 rounded-md shadow-sm text-gray-900"
-                    />
-                </div>
-                <div>
-                    <label htmlFor="end-date" className="block text-xs font-medium text-gray-600 mb-1">
-                        End Date
-                    </label>
-                    <input
-                        type="date"
-                        id="end-date"
-                        value={endDateFilter}
-                        onChange={(e) => setEndDateFilter(e.target.value)}
-                        min={startDateFilter}
-                        className="focus:ring-indigo-500 focus:border-indigo-500 block w-full px-3 py-2 sm:text-sm border-gray-300 rounded-md shadow-sm text-gray-900"
-                    />
+            <div className="space-y-4">
+                <p className="text-sm font-medium flex items-center gap-2">
+                    <FiCalendar className="h-4 w-4 text-primary" />
+                    <span>Date Range</span>
+                </p>
+                <div className="space-y-3">
+                    <div>
+                        <label htmlFor="start-date" className="block text-xs font-medium text-muted-foreground mb-1">
+                            Start Date
+                        </label>
+                        <input
+                            type="date"
+                            id="start-date"
+                            value={startDateFilter}
+                            onChange={(e) => setStartDateFilter(e.target.value)}
+                            className="block w-full px-3 py-2 text-sm border border-border bg-background rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="end-date" className="block text-xs font-medium text-muted-foreground mb-1">
+                            End Date
+                        </label>
+                        <input
+                            type="date"
+                            id="end-date"
+                            value={endDateFilter}
+                            onChange={(e) => setEndDateFilter(e.target.value)}
+                            min={startDateFilter}
+                            className="block w-full px-3 py-2 text-sm border border-border bg-background rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                        />
+                    </div>
                 </div>
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Filter by Tags
-                </label>
+                <p className="text-sm font-medium flex items-center gap-2 mb-3">
+                    <FiTag className="h-4 w-4 text-primary" />
+                    <span>Tags</span>
+                </p>
                 {allTags.length > 0 ? (
-                    <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-1">
+                    <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
                         {allTags.map(tag => (
                             <button
                                 key={tag}
                                 onClick={() => handleTagClick(tag)}
-                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors duration-150 ease-in-out flex items-center 
-                                    ${selectedTags.includes(tag)
-                                        ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center ${selectedTags.includes(tag)
+                                        ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                                    }`}
                             >
-                                <FiTag className="w-3 h-3 mr-1.5 flex-shrink-0" />
+                                {selectedTags.includes(tag) ? (
+                                    <FiX className="w-3 h-3 mr-1.5 flex-shrink-0" />
+                                ) : (
+                                    <FiTag className="w-3 h-3 mr-1.5 flex-shrink-0" />
+                                )}
                                 <span className="truncate" title={tag}>{tag}</span>
-                                {selectedTags.includes(tag) && <FiX className="w-3 h-3 ml-1.5 flex-shrink-0" />}
                             </button>
                         ))}
                     </div>
                 ) : (
-                    <p className="text-sm text-gray-500">No tags available.</p>
+                    <p className="text-sm text-muted-foreground">No tags available.</p>
                 )}
             </div>
 
             {(searchTerm || selectedTags.length > 0 || startDateFilter || endDateFilter) && (
                 <button
                     onClick={clearFilters}
-                    className="w-full mt-4 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+                    className="w-full mt-4 btn btn-primary group"
                 >
+                    <FiRefreshCw className="h-4 w-4 mr-2 group-hover:rotate-90 transition-transform" />
                     Clear All Filters
                 </button>
             )}

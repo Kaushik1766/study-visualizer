@@ -3,6 +3,7 @@
 import { useParams } from 'next/navigation';
 import React, { useState } from 'react';
 import { useStudies } from '@/app/hooks/useStudies';
+import { FiArrowLeft } from 'react-icons/fi';
 
 import LoadingState from '@/components/study/LoadingState';
 import ErrorDisplay from '@/components/study/ErrorDisplay';
@@ -15,6 +16,7 @@ import SegmentDataDisplay from '@/components/study-detail/SegmentDataDisplay';
 import { useSegmentData, ActiveViewModeType } from '@/app/hooks/useSegmentData';
 import { useSegmentColumns } from '@/app/hooks/useSegmentColumns';
 import { formatDate } from '@/app/utils/segmentUtils';
+import Link from 'next/link';
 
 const StudyDetailPage = () => {
     const params = useParams();
@@ -77,8 +79,15 @@ const StudyDetailPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8 text-gray-900">
+        <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 fade-in">
             <div className="max-w-7xl mx-auto">
+                <div className="mb-6">
+                    <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
+                        <FiArrowLeft className="w-4 h-4" />
+                        <span>Back to all studies</span>
+                    </Link>
+                </div>
+
                 <StudyDetailHeader
                     study={study}
                     overallBaseSize={overallBaseSize}
@@ -86,33 +95,44 @@ const StudyDetailPage = () => {
                     onBack={() => window.history.back()}
                 />
 
-                <ViewModeSwitcher
-                    activeViewMode={activeViewMode}
-                    onViewModeChange={onViewModeChange}
-                    activeDisplayPreference={activeDisplayPreference}
-                    onDisplayPreferenceChange={handleDisplayPreferenceChange}
-                />
+                <div className="bg-card border border-border rounded-lg shadow-sm p-4 mb-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <h3 className="text-lg font-medium">Visualization Controls</h3>
+                        <div className="flex flex-wrap items-center gap-4">
+                            <ViewModeSwitcher
+                                activeViewMode={activeViewMode}
+                                onViewModeChange={onViewModeChange}
+                                activeDisplayPreference={activeDisplayPreference}
+                                onDisplayPreferenceChange={handleDisplayPreferenceChange}
+                            />
+                        </div>
+                    </div>
+                </div>
 
-                <SegmentTabs
-                    segments={displayableSegments}
-                    activeSegmentKey={activeSegmentKey}
-                    onSegmentChange={setActiveSegmentKey}
-                />
+                <div className="bg-card border border-border rounded-lg shadow-sm mb-6 overflow-hidden">
+                    <SegmentTabs
+                        segments={displayableSegments}
+                        activeSegmentKey={activeSegmentKey}
+                        onSegmentChange={setActiveSegmentKey}
+                    />
+                </div>
 
-                <SegmentDataDisplay
-                    activeSegmentKey={activeSegmentKey}
-                    activeSegmentData={activeSegmentData}
-                    activeSegmentConfig={activeSegmentConfig}
-                    marketSegmentColumns={marketSegmentColumns}
-                    ageDemographicColumns={ageDemographicColumns}
-                    prelimSpecificAgeColumns={prelimSpecificAgeColumns}
-                    prelimColumns={prelimColumns}
-                    genderDemographicColumns={genderDemographicColumns}
-                    activeDisplayPreference={activeDisplayPreference}
-                />
+                <div className="bg-card border border-border rounded-lg shadow-sm p-6 mb-6">
+                    <SegmentDataDisplay
+                        activeSegmentKey={activeSegmentKey}
+                        activeSegmentData={activeSegmentData}
+                        activeSegmentConfig={activeSegmentConfig}
+                        marketSegmentColumns={marketSegmentColumns}
+                        ageDemographicColumns={ageDemographicColumns}
+                        prelimSpecificAgeColumns={prelimSpecificAgeColumns}
+                        prelimColumns={prelimColumns}
+                        genderDemographicColumns={genderDemographicColumns}
+                        activeDisplayPreference={activeDisplayPreference}
+                    />
+                </div>
 
                 <footer className="mt-12 text-center">
-                    <p className="text-sm text-gray-500">End of Study Details</p>
+                    <p className="text-sm text-muted-foreground">Study data visualization completed</p>
                 </footer>
             </div>
         </div>
