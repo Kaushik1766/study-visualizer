@@ -15,6 +15,7 @@ interface SegmentDataDisplayProps {
     ageDemographicColumns: SegmentColumn[];
     prelimSpecificAgeColumns: SegmentColumn[];
     genderDemographicColumns: SegmentColumn[];
+    prelimColumns: SegmentColumn[]; // Added new prop
 }
 
 const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
@@ -26,6 +27,7 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
     ageDemographicColumns,
     prelimSpecificAgeColumns,
     genderDemographicColumns,
+    prelimColumns, // Added new prop
 }) => {
     if (!activeSegmentData) {
         return <p className="text-center text-gray-500 py-10">Select a segment tab to view its data.</p>;
@@ -125,19 +127,21 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
                             </div>
                         );
                     }
-                    // Existing logic for Prelim
+                    // Updated logic for Prelim
                     else if (segmentDisplayName === 'Prelim') {
                         return (
                             <div key={qIndex} className="border border-gray-200 rounded-lg p-4">
                                 <h3 className="text-xl font-semibold text-gray-700 mb-3">{question.Question}</h3>
-                                {prelimSpecificAgeColumns.length > 0 && question.options && question.options.length > 0 ? (
+                                {prelimColumns.length > 0 && question.options && question.options.length > 0 ? (
                                     <div className="overflow-x-auto mb-4">
                                         <table className="min-w-full divide-y divide-gray-200">
                                             <thead className="bg-gray-50">
                                                 <tr>
                                                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Response</th>
-                                                    {prelimSpecificAgeColumns.map(col => (
-                                                        <th key={col.header} scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{col.header} ({col.count})</th>
+                                                    {prelimColumns.map(col => (
+                                                        <th key={col.header} scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                            {col.header} ({col.count})
+                                                        </th>
                                                     ))}
                                                 </tr>
                                             </thead>
@@ -145,17 +149,31 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
                                                 {question.options?.map((option, oIndex) => (
                                                     <tr key={oIndex}>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{option.optiontext}</td>
-                                                        {prelimSpecificAgeColumns.map(col => (
-                                                            <td key={col.header} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                                {String(option["Age Segments"]?.[col.header] ?? 'N/A')}
-                                                            </td>
-                                                        ))}
+                                                        {prelimColumns.map(col => {
+                                                            let cellValue: string | number = 'N/A';
+                                                            if (option["Prelim-Answer Segments"] && Array.isArray(option["Prelim-Answer Segments"])) {
+                                                                const prelimSegment = option["Prelim-Answer Segments"].find(
+                                                                    s => s && typeof s === 'object' && s.hasOwnProperty(col.header)
+                                                                );
+                                                                if (prelimSegment) {
+                                                                    const val = prelimSegment[col.header];
+                                                                    if (val !== undefined && val !== null) {
+                                                                        cellValue = val;
+                                                                    }
+                                                                }
+                                                            }
+                                                            return (
+                                                                <td key={col.header} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                                    {String(cellValue)}
+                                                                </td>
+                                                            );
+                                                        })}
                                                     </tr>
                                                 ))}
                                             </tbody>
                                         </table>
                                     </div>
-                                ) : <p className="text-sm text-gray-500">No age breakdown columns available or no options for this question.</p>}
+                                ) : <p className="text-sm text-gray-500">No prelim columns or options for this question.</p>}
                             </div>
                         );
                     }

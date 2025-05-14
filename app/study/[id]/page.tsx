@@ -181,6 +181,20 @@ const StudyDetailPage = () => {
         return [];
     }, [activeSegmentKey, study?.studyData, activeViewMode, displayableSegments]);
 
+    const prelimColumns = useMemo(() => {
+        if (!activeSegmentKey || !activeSegmentData?.["Base Values"] || !displayableSegments) return [];
+        const currentSegmentConfig = displayableSegments.find(s => s.key === activeSegmentKey);
+        const dataKeyForName = currentSegmentConfig?.parentKey;
+        const segmentName = dataKeyForName ? getSegmentDisplayName(dataKeyForName) : "";
+
+        if (segmentName === 'Prelim' && activeSegmentData?.["Base Values"]) {
+            return Object.entries(activeSegmentData["Base Values"])
+                .filter(([key, value]) => value !== null && !key.startsWith("Unnamed:"))
+                .map(([key, value]) => ({ header: key, count: value as number || 0 }));
+        }
+        return [];
+    }, [activeSegmentKey, activeSegmentData, displayableSegments, getSegmentDisplayName]);
+
     const genderDemographicColumns = useMemo(() => {
         if (!activeSegmentKey || !activeSegmentData?.["Base Values"] || !displayableSegments) return [];
         const currentSegmentConfig = displayableSegments.find(s => s.key === activeSegmentKey);
@@ -308,6 +322,7 @@ const StudyDetailPage = () => {
                     marketSegmentColumns={marketSegmentColumns}
                     ageDemographicColumns={ageDemographicColumns}
                     prelimSpecificAgeColumns={prelimSpecificAgeColumns}
+                    prelimColumns={prelimColumns} // Added new prop
                     genderDemographicColumns={genderDemographicColumns}
                 />
 
