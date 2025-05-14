@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { BsGithub } from "react-icons/bs";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,14 +36,14 @@ export default function RootLayout({
         <QueryClientProvider client={queryClient}>
           <div className="min-h-screen flex flex-col">
             <header className="bg-card border-b border-border sticky top-0 z-50 backdrop-blur-md bg-opacity-90">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="max-w-[90%] mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                   <div className="flex items-center">
                     <Link href="/" className="flex items-center space-x-2">
                       <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
                         <span className="text-primary-foreground font-bold text-xl">S</span>
                       </div>
-                      <span className="font-semibold text-lg">Study Visualizer</span>
+                      <span className="font-semibold text-lg hidden sm:block">Study Visualizer Assignment</span>
                     </Link>
                   </div>
                   <nav className="hidden md:flex items-center space-x-4">
@@ -55,26 +56,15 @@ export default function RootLayout({
                     >
                       Dashboard
                     </Link>
-                    {/* <Link
-                      href="#"
-                      className="px-3 py-2 rounded-md text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
-                    >
-                      Analytics
-                    </Link>
-                    <Link
-                      href="#"
-                      className="px-3 py-2 rounded-md text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
-                    >
-                      Documentation
-                    </Link> */}
                   </nav>
                   <div className="flex items-center gap-4">
-                    <button className="btn btn-secondary hidden md:flex">
-                      <span>Help</span>
-                    </button>
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center text-white">
-                      <span className="text-xs font-semibold">KS</span>
-                    </div>
+                    <Link href={'https://github.com/Kaushik1766'} target="_blank" className="flex items-center gap-2 hover:text-primary cursor-pointer">
+                      <span className="hidden sm:block">Kaushik Saha</span>
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-white">
+                        {/* <span className="text-xs font-semibold">KS</span> */}
+                        <BsGithub className="w-8 h-8" />
+                      </div>
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -88,19 +78,12 @@ export default function RootLayout({
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-col md:flex-row justify-between items-center">
                   <div className="mb-4 md:mb-0">
-                    <p className="text-sm text-foreground/70">
-                      &copy; {new Date().getFullYear()} Study Visualizer. All rights reserved.
+                    <p className="text-sm text-foreground/70"> Created by Kaushik Saha
                     </p>
                   </div>
                   <div className="flex space-x-6">
-                    <a href="#" className="text-foreground/70 hover:text-primary">
-                      Terms
-                    </a>
-                    <a href="#" className="text-foreground/70 hover:text-primary">
-                      Privacy
-                    </a>
-                    <a href="#" className="text-foreground/70 hover:text-primary">
-                      Contact
+                    <a href="https://github.com/Kaushik1766" target="_blank" className="text-foreground/70 hover:text-primary">
+                      Github
                     </a>
                   </div>
                 </div>

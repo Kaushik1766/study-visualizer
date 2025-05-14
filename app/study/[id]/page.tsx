@@ -131,9 +131,9 @@ const StudyDetailPage = () => {
                     />
                 </div>
 
-                <footer className="mt-12 text-center">
+                {/* <footer className="mt-12 text-center">
                     <p className="text-sm text-muted-foreground">Study data visualization completed</p>
-                </footer>
+                </footer> */}
             </div>
         </div>
     );

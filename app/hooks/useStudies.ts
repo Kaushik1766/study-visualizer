@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { StudyResponse } from '@/types/StudyResponse';
 
 async function fetchStudiesAPI(): Promise<StudyResponse[]> {
-    const res = await fetch('https://studiesapi.tikuntech.com/mf2/user/studies', {
+    const res = await fetch('https://studiesapi.tikuntech.com/mf2/studies', {
         headers: {
             "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc0NzEzMDA2MSwianRpIjoiOTg2MWFkMjgtNDNlMC00Y2QxLWFkNWQtNzhjNjgwOTQ0YzUzIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3R1c2VyQGV4YW1wbGUuY29tIiwibmJmIjoxNzQ3MTMwMDYxLCJjc3JmIjoiMmZmNzllYjItNTdkNi00ZGE3LTk2ZTYtMWViMDE4ZTJkODZjIiwiZXhwIjoxNzQ5NzIyMDYxfQ.dS5Yw1MYpGtLKoCUjXsK5h5Rt8qsddX7WwINdkjkHm4`
         }

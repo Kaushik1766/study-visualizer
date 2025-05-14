@@ -235,15 +235,15 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
                 <div className="space-y-8">
                     {isMarketSegmentsView && activeSegmentData.Data?.Questions?.map((question: Question, qIndex: number) => (
                         <div key={`market-segment-q-${qIndex}`} className="border border-border rounded-lg p-4 bg-background/50">
-                            <h3 className="text-xl font-medium mb-3">{question.Question}</h3>
+                            <h3 className="text-xl font-medium mb-3 text-foreground">{question.Question}</h3>
                             {marketSegmentColumns.length > 0 && question.options && question.options.length > 0 ? (
                                 <div className="overflow-x-auto mb-4">
                                     <table className="min-w-full divide-y divide-border">
-                                        <thead className="bg-secondary/50">
+                                        <thead className="bg-primary/5">
                                             <tr>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Response</th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">Response</th>
                                                 {marketSegmentColumns.map(col => (
-                                                    <th key={col.header} scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                                    <th key={col.header} scope="col" className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">
                                                         {col.header} ({col.count})
                                                     </th>
                                                 ))}
@@ -251,8 +251,8 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
                                         </thead>
                                         <tbody className="bg-card divide-y divide-border">
                                             {question.options?.map((option, oIndex) => (
-                                                <tr key={`market-segment-q-${qIndex}-opt-${oIndex}`}>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{option.optiontext}</td>
+                                                <tr key={`market-segment-q-${qIndex}-opt-${oIndex}`} className="hover:bg-secondary/30 transition-colors">
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{option.optiontext}</td>
                                                     {marketSegmentColumns.map(col => {
                                                         let cellValue: string | number = 'N/A';
                                                         if (option.Mindsets && Array.isArray(option.Mindsets)) {
@@ -267,7 +267,7 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
                                                             }
                                                         }
                                                         return (
-                                                            <td key={col.header} className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                                                            <td key={col.header} className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                                                 {String(cellValue)}
                                                             </td>
                                                         );
@@ -277,7 +277,7 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
                                         </tbody>
                                     </table>
                                 </div>
-                            ) : <p className="text-sm text-muted-foreground">No market segment columns or options for this question.</p>}
+                            ) : <p className="text-sm text-foreground">No market segment columns or options for this question.</p>}
                         </div>
                     ))}
 
@@ -286,24 +286,24 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
                         if (segmentDisplayName === 'Age') {
                             return (
                                 <div key={qIndex} className="border border-border rounded-lg p-4 bg-background/50">
-                                    <h3 className="text-xl font-medium mb-3">{question.Question}</h3>
+                                    <h3 className="text-xl font-medium mb-3 text-foreground">{question.Question}</h3>
                                     {ageDemographicColumns.length > 0 && question.options && question.options.length > 0 ? (
                                         <div className="overflow-x-auto mb-4">
                                             <table className="min-w-full divide-y divide-border">
-                                                <thead className="bg-secondary/50">
+                                                <thead className="bg-primary/5">
                                                     <tr>
-                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Response</th>
+                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">Response</th>
                                                         {ageDemographicColumns.map(col => (
-                                                            <th key={col.header} scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">{col.header} ({col.count})</th>
+                                                            <th key={col.header} scope="col" className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">{col.header} ({col.count})</th>
                                                         ))}
                                                     </tr>
                                                 </thead>
                                                 <tbody className="bg-card divide-y divide-border">
                                                     {question.options?.map((option, oIndex) => (
-                                                        <tr key={oIndex}>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{option.optiontext}</td>
+                                                        <tr key={oIndex} className="hover:bg-secondary/30 transition-colors">
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{option.optiontext}</td>
                                                             {ageDemographicColumns.map(col => (
-                                                                <td key={col.header} className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                                                                <td key={col.header} className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                                                     {String(option["Age Segments"]?.[col.header] ?? 'N/A')}
                                                                 </td>
                                                             ))}
@@ -312,21 +312,21 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
                                                 </tbody>
                                             </table>
                                         </div>
-                                    ) : <p className="text-sm text-muted-foreground">No age demographic columns or options for this question.</p>}
+                                    ) : <p className="text-sm text-foreground">No age demographic columns or options for this question.</p>}
                                 </div>
                             );
                         } else if (segmentDisplayName === 'Prelim') {
                             return (
                                 <div key={qIndex} className="border border-border rounded-lg p-4 bg-background/50">
-                                    <h3 className="text-xl font-medium mb-3">{question.Question}</h3>
+                                    <h3 className="text-xl font-medium mb-3 text-foreground">{question.Question}</h3>
                                     {prelimColumns.length > 0 && question.options && question.options.length > 0 ? (
                                         <div className="overflow-x-auto mb-4">
                                             <table className="min-w-full divide-y divide-border">
-                                                <thead className="bg-secondary/50">
+                                                <thead className="bg-primary/5">
                                                     <tr>
-                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Response</th>
+                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">Response</th>
                                                         {prelimColumns.map(col => (
-                                                            <th key={col.header} scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                                            <th key={col.header} scope="col" className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">
                                                                 {col.header} ({col.count})
                                                             </th>
                                                         ))}
@@ -334,8 +334,8 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
                                                 </thead>
                                                 <tbody className="bg-card divide-y divide-border">
                                                     {question.options?.map((option, oIndex) => (
-                                                        <tr key={oIndex}>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{option.optiontext}</td>
+                                                        <tr key={oIndex} className="hover:bg-secondary/30 transition-colors">
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{option.optiontext}</td>
                                                             {prelimColumns.map(col => {
                                                                 let cellValue: string | number = 'N/A';
                                                                 if (option["Prelim-Answer Segments"] && Array.isArray(option["Prelim-Answer Segments"])) {
@@ -350,7 +350,7 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
                                                                     }
                                                                 }
                                                                 return (
-                                                                    <td key={col.header} className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                                                                    <td key={col.header} className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                                                         {String(cellValue)}
                                                                     </td>
                                                                 );
@@ -360,30 +360,30 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
                                                 </tbody>
                                             </table>
                                         </div>
-                                    ) : <p className="text-sm text-muted-foreground">No prelim columns or options for this question.</p>}
+                                    ) : <p className="text-sm text-foreground">No prelim columns or options for this question.</p>}
                                 </div>
                             );
                         } else if (segmentDisplayName === 'Gender') {
                             return (
                                 <div key={qIndex} className="border border-border rounded-lg p-4 bg-background/50">
-                                    <h3 className="text-xl font-medium mb-3">{question.Question}</h3>
+                                    <h3 className="text-xl font-medium mb-3 text-foreground">{question.Question}</h3>
                                     {genderDemographicColumns.length > 0 && question.options && question.options.length > 0 ? (
                                         <div className="overflow-x-auto mb-4">
                                             <table className="min-w-full divide-y divide-border">
-                                                <thead className="bg-secondary/50">
+                                                <thead className="bg-primary/5">
                                                     <tr>
-                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Response</th>
+                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">Response</th>
                                                         {genderDemographicColumns.map(col => (
-                                                            <th key={col.header} scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">{col.header} ({col.count})</th>
+                                                            <th key={col.header} scope="col" className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">{col.header} ({col.count})</th>
                                                         ))}
                                                     </tr>
                                                 </thead>
                                                 <tbody className="bg-card divide-y divide-border">
                                                     {question.options?.map((option, oIndex) => (
-                                                        <tr key={oIndex}>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{option.optiontext}</td>
+                                                        <tr key={oIndex} className="hover:bg-secondary/30 transition-colors">
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{option.optiontext}</td>
                                                             {genderDemographicColumns.map(col => (
-                                                                <td key={col.header} className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                                                                <td key={col.header} className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                                                     {String(option["Gender Segments"]?.[col.header] ?? 'N/A')}
                                                                 </td>
                                                             ))}
@@ -392,23 +392,23 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
                                                 </tbody>
                                             </table>
                                         </div>
-                                    ) : <p className="text-sm text-muted-foreground">No gender demographic columns or options for this question.</p>}
+                                    ) : <p className="text-sm text-foreground">No gender demographic columns or options for this question.</p>}
                                 </div>
                             );
                         } else {
                             return (
                                 <div key={qIndex} className="border border-border rounded-lg p-4 bg-background/50">
-                                    <h3 className="text-xl font-medium mb-3">{question.Question}</h3>
+                                    <h3 className="text-xl font-medium mb-3 text-foreground">{question.Question}</h3>
                                     {question.options && question.options.length > 0 ? (
                                         <ul className="space-y-2 mb-3">
                                             {question.options?.map((option, oIndex) => (
-                                                <li key={oIndex} className="text-sm text-muted-foreground p-2 bg-secondary/30 rounded">
+                                                <li key={oIndex} className="text-sm text-foreground p-2 bg-secondary/30 rounded">
                                                     {option.optiontext}
                                                     {option.Total !== undefined && <span className="ml-2 font-semibold text-primary">(Total: {option.Total})</span>}
                                                 </li>
                                             ))}
                                         </ul>
-                                    ) : <p className="text-sm text-muted-foreground">No options available for this question.</p>}
+                                    ) : <p className="text-sm text-foreground">No options available for this question.</p>}
                                 </div>
                             );
                         }
