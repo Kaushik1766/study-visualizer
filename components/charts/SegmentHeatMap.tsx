@@ -33,6 +33,23 @@ const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
     const [uniqueYValues, setUniqueYValues] = useState<string[]>([]);
     const [minValue, setMinValue] = useState<number>(0);
     const [maxValue, setMaxValue] = useState<number>(0);
+    const [isMobile, setIsMobile] = useState(false);
+
+    // Check for mobile view on mount and window resize
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        // Initial check
+        checkMobile();
+
+        // Add resize listener
+        window.addEventListener('resize', checkMobile);
+
+        // Clean up
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     useEffect(() => {
         if (!data || data.length === 0) return;
@@ -57,16 +74,39 @@ const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
         return <p className="text-sm text-center text-foreground py-4">No data available to display heatmap for this section.</p>;
     }
 
+    // Custom formatter for X-axis labels to truncate long text
+    const formatXAxisTick = (value: string) => {
+        // On mobile, use numbers that reference the index
+        if (isMobile) {
+            const index = uniqueXValues.findIndex(x => x === value) + 1;
+            return `${index}`;
+        }
+        // On desktop, truncate if too long
+        if (value.length > 15) {
+            return `${value.substring(0, 13)}...`;
+        }
+        return value;
+    };
+
+    // Custom formatter for Y-axis labels to truncate long text
+    const formatYAxisTick = (value: string) => {
+        if (isMobile && value.length > 10) {
+            return `${value.substring(0, 8)}...`;
+        }
+        return value;
+    };
+
     // Custom shape for each cell in the heatmap
     const CustomizedShape = (props: any) => {
         const { cx, cy, payload } = props;
+        const cellSize = isMobile ? 12 : 30;
 
         return (
             <Rectangle
-                x={cx - 15}
-                y={cy - 15}
-                width={30}
-                height={30}
+                x={cx - cellSize / 2}
+                y={cy - cellSize / 2}
+                width={cellSize}
+                height={cellSize}
                 fill={payload.color}
                 stroke="var(--border)"
                 strokeWidth={1}
@@ -75,80 +115,76 @@ const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
         );
     };
 
-    // Custom formatter for X-axis labels to truncate long text
-    const formatXAxisTick = (value: string) => {
-        // If the value is longer than 20 characters, truncate it
-        if (value.length > 20) {
-            return `${value.substring(0, 18)}...`;
-        }
-        return value;
-    };
-
     // Custom tooltip for the heatmap
     const CustomTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
             const data = payload[0].payload;
             return (
-                <div className="bg-card p-3 border border-border shadow-md rounded-md text-foreground">
-                    <p className="font-semibold text-sm mb-1">{data.x}</p>
-                    <p className="text-sm">{data.y}: <span className="font-medium">{data.value}</span></p>
+                <div className="bg-card p-3 border border-border shadow-md rounded-md text-foreground max-w-[200px]">
+                    <p className="font-semibold text-xs md:text-sm mb-1 break-words">{data.x}</p>
+                    <p className="text-xs md:text-sm">{data.y}: <span className="font-medium">{data.value}</span></p>
                 </div>
             );
         }
         return null;
     };
 
-    // Calculate height based on number of segments
-    const chartHeight = Math.max(450, uniqueYValues.length * 50);
+    // Calculate height based on device and number of segments
+    const mobileBaseHeight = 350;
+    const desktopBaseHeight = 450;
+    const chartHeight = isMobile
+        ? Math.max(mobileBaseHeight, uniqueYValues.length * 25)  // Smaller cell height on mobile
+        : Math.max(desktopBaseHeight, uniqueYValues.length * 50);
 
     // Create a legend with color scale
     const renderColorLegend = () => {
         return (
-            <div className="flex flex-col items-center mt-6 bg-secondary/30 py-2 rounded-md">
-                <p className="text-sm text-foreground mb-1">Value Scale</p>
+            <div className="flex flex-col items-center mt-2 md:mt-4 bg-secondary/30 py-1 md:py-2 rounded-md">
+                <p className="text-xs md:text-sm text-foreground mb-0 md:mb-1">Value Scale</p>
                 <div className="flex items-center">
-                    <span className="text-xs text-foreground mr-2">{minValue}</span>
-                    <div className="flex h-6 border border-border shadow-sm">
+                    <span className="text-xs text-foreground mr-1 md:mr-2">{minValue}</span>
+                    <div className="flex h-4 md:h-6 border border-border shadow-sm">
                         {colorRange.map((color, i) => (
                             <div
                                 key={i}
                                 style={{
                                     backgroundColor: color,
-                                    width: '24px',
+                                    width: isMobile ? '12px' : '24px',
                                     height: '100%'
                                 }}
                             />
                         ))}
                     </div>
-                    <span className="text-xs text-foreground ml-2">{maxValue}</span>
+                    <span className="text-xs text-foreground ml-1 md:ml-2">{maxValue}</span>
                 </div>
             </div>
         );
     };
 
-    // Create a key for X-axis labels with full text
+    // Create reference key for X-axis labels (especially for mobile)
     const renderFullTextLegend = () => {
-        // Only show this if we have truncated some labels
-        if (!data.some(item => item.x.length > 20)) return null;
-
-        return (
-            <div className="mt-6 bg-secondary/30 p-4 rounded-md overflow-auto max-h-40">
-                <p className="text-sm font-medium text-foreground mb-2">Full Labels:</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                    {uniqueXValues.map((value, index) => (
-                        <div key={index} className="text-xs text-foreground p-1 bg-card rounded border border-border">
-                            <span className="font-medium">{index + 1}.</span> {value}
-                        </div>
-                    ))}
+        // Show for all mobile views or when we have truncated desktop labels
+        if ((isMobile && uniqueXValues.length > 0) || uniqueXValues.some(x => x.length > 15)) {
+            return (
+                <div className="mt-2 bg-secondary/30 p-1 md:p-2 rounded-md text-xs">
+                    <p className="font-medium text-foreground mb-1 px-1">Labels Reference:</p>
+                    <div className="max-h-32 overflow-y-auto px-1">
+                        {uniqueXValues.map((value, index) => (
+                            <div key={index} className="mb-1 p-1 bg-card rounded border border-border text-xs">
+                                <span className="font-medium">{index + 1}.</span> {value}
+                            </div>
+                        ))}
+                    </div>
                 </div>
-            </div>
-        );
+            );
+        }
+        return null;
     };
 
     return (
-        <div className="my-6 p-4 border border-border rounded-lg bg-background">
-            {title && <h4 className="text-lg font-semibold text-foreground mb-4 text-center">{title}</h4>}
-            <div className="flex justify-between mb-2 text-sm text-foreground">
+        <div className="my-4 p-0 md:p-4 border border-border rounded-lg bg-background">
+            {title && <h4 className="text-md md:text-lg font-semibold text-foreground mb-2 md:mb-4 text-center px-2">{title}</h4>}
+            <div className="flex justify-between mb-1 md:mb-2 text-xs md:text-sm text-foreground px-2">
                 <div>{yAxisTitle}</div>
                 <div>{xAxisTitle}</div>
             </div>
@@ -156,10 +192,10 @@ const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
                 <ResponsiveContainer width="100%" height={chartHeight}>
                     <ScatterChart
                         margin={{
-                            top: 20,
-                            right: 50,
-                            bottom: 40, // Reduced bottom margin since we're truncating
-                            left: 180, // Space for Y-axis labels
+                            top: isMobile ? 10 : 20,
+                            right: isMobile ? 5 : 50,
+                            bottom: isMobile ? 10 : 20,
+                            left: isMobile ? 60 : 180, // Less space for Y-axis on mobile
                         }}
                     >
                         <XAxis
@@ -167,24 +203,25 @@ const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
                             dataKey="x"
                             name="option"
                             allowDuplicatedCategory={false}
-                            tick={{ fontSize: 11, fill: 'var(--foreground)' }}
+                            tick={{ fontSize: isMobile ? 10 : 12, fill: 'var(--foreground)' }}
                             interval={0}
-                            height={50}
-                            angle={0} // Horizontal text
+                            height={40}
+                            angle={0}
                             textAnchor="middle"
                             axisLine={{ stroke: 'var(--border)' }}
                             tickLine={{ stroke: 'var(--border)' }}
-                            tickFormatter={formatXAxisTick} // Apply the formatter
+                            tickFormatter={formatXAxisTick}
                         />
                         <YAxis
                             type="category"
                             dataKey="y"
                             name="segment"
                             allowDuplicatedCategory={false}
-                            width={170}
-                            tick={{ fontSize: 12, fill: 'var(--foreground)' }}
+                            width={isMobile ? 70 : 170}
+                            tick={{ fontSize: isMobile ? 10 : 12, fill: 'var(--foreground)' }}
                             axisLine={{ stroke: 'var(--border)' }}
                             tickLine={{ stroke: 'var(--border)' }}
+                            tickFormatter={formatYAxisTick}
                         />
                         <Tooltip content={<CustomTooltip />} />
                         <Scatter
@@ -195,7 +232,7 @@ const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
                 </ResponsiveContainer>
             </div>
             {renderColorLegend()}
-            {renderFullTextLegend()} {/* Add the full text legend */}
+            {renderFullTextLegend()}
         </div>
     );
 };
