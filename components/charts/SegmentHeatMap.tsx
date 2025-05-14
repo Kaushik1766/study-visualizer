@@ -169,14 +169,14 @@ const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
                 <div>{yAxisTitle}</div>
                 <div>{xAxisTitle}</div>
             </div>
-            <div className="bg-card border border-border rounded-md">
-                <ResponsiveContainer width="100%" height={chartHeight}>
+            <div className="bg-card border border-border rounded-md flex justify-center items-center overflow-hidden">
+                <ResponsiveContainer width="90%" height={chartHeight}>
                     <ScatterChart
                         margin={{
                             top: isMobile ? 10 : 20,
-                            right: isMobile ? 5 : 50,
+                            right: isMobile ? 20 : 60,
                             bottom: isMobile ? 10 : 20,
-                            left: isMobile ? 60 : 180,
+                            left: isMobile ? 20 : 60,
                         }}
                     >
                         <XAxis
@@ -184,7 +184,7 @@ const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
                             dataKey="x"
                             name="option"
                             allowDuplicatedCategory={false}
-                            tick={{ fontSize: isMobile ? 10 : 12, fill: 'var(--foreground)' }}
+                            tick={{ fontSize: isMobile ? 9 : 11, fill: 'var(--foreground)' }}
                             interval={0}
                             height={40}
                             angle={0}
@@ -198,8 +198,8 @@ const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
                             dataKey="y"
                             name="segment"
                             allowDuplicatedCategory={false}
-                            width={isMobile ? 70 : 170}
-                            tick={{ fontSize: isMobile ? 10 : 12, fill: 'var(--foreground)' }}
+                            width={isMobile ? 50 : 80}
+                            tick={{ fontSize: isMobile ? 9 : 11, fill: 'var(--foreground)' }}
                             axisLine={{ stroke: 'var(--border)' }}
                             tickLine={{ stroke: 'var(--border)' }}
                             tickFormatter={formatYAxisTick}

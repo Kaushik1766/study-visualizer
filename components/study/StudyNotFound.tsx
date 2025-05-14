@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import React from 'react';
 import { FiSearch, FiArrowLeft } from 'react-icons/fi';
 
@@ -23,12 +24,13 @@ const StudyNotFound: React.FC<StudyNotFoundProps> = ({ studyId }) => {
                         The requested study could not be found.
                     </p>
                 )}
-                <button
-                    onClick={() => window.history.back()}
+                <Link
+                    href="/"
+                    // onClick={() => window.history.back()}
                     className="btn btn-primary inline-flex items-center gap-2"
                 >
                     <FiArrowLeft className="w-4 h-4" /> Back to Studies
-                </button>
+                </Link>
             </div>
         </div>
     );
