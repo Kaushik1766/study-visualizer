@@ -26,8 +26,8 @@ const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
         return <p className="text-sm text-center text-foreground py-4">No data available to display heatmap for this section.</p>;
     }
 
-    const uniqueXValues = [...new Set(data.map(item => item.x))];
-    const uniqueYValues = [...new Set(data.map(item => item.y))].reverse();
+    const uniqueYValues = [...new Set(data.map(item => item.y))];
+    const uniqueXValues = [...new Set(data.map(item => item.x))].reverse();
 
     const dataMap: Record<string, HeatMapDataPoint> = {};
     data.forEach(item => {
@@ -86,10 +86,10 @@ const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
                             <tr>
                                 <th className="border-b border-r border-border bg-secondary/20 p-3 font-medium text-foreground text-xs md:text-sm"
                                     style={{ width: '180px', minWidth: '180px' }}>
-                                    {yAxisTitle} / {xAxisTitle}
+                                    {xAxisTitle} / {yAxisTitle}
                                 </th>
-                                {uniqueXValues.map((x, xIndex) => (
-                                    <th key={`header-${xIndex}`}
+                                {uniqueYValues.map((y, yIndex) => (
+                                    <th key={`header-${yIndex}`}
                                         className="border-b border-border p-3 text-center font-medium text-foreground text-xs md:text-sm"
                                         style={{
                                             minWidth: '100px',
@@ -98,15 +98,15 @@ const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
                                             whiteSpace: 'normal'
                                         }}
                                     >
-                                        {x}
+                                        {y}
                                     </th>
                                 ))}
                             </tr>
                         </thead>
 
                         <tbody>
-                            {uniqueYValues.map((y, yIndex) => (
-                                <tr key={`row-${yIndex}`}>
+                            {uniqueXValues.map((x, xIndex) => (
+                                <tr key={`row-${xIndex}`}>
                                     <th className="border-r border-border bg-secondary/20 p-3 text-right font-medium text-foreground text-xs md:text-sm"
                                         style={{
                                             wordBreak: 'break-word',
@@ -115,10 +115,10 @@ const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
                                             minWidth: '180px'
                                         }}
                                     >
-                                        {y}
+                                        {x}
                                     </th>
 
-                                    {uniqueXValues.map((x, xIndex) => {
+                                    {uniqueYValues.map((y, yIndex) => {
                                         const dataPoint = dataMap[`${x}_${y}`];
                                         const value = dataPoint?.value ?? 0;
                                         const color = dataPoint?.color || '#f5f5f5';
@@ -140,6 +140,8 @@ const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
                                                 <div
                                                     className="flex items-center justify-center h-full w-full font-bold text-2xl hover:opacity-90 transition-opacity"
                                                     style={{ color: textColor }}
+                                                    onMouseEnter={() => setHoveredCell({ x, y, value })}
+                                                    onMouseLeave={() => setHoveredCell(null)}
                                                 >
                                                     {value}
                                                 </div>
