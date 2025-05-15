@@ -25,10 +25,8 @@ const StudyDetailPage = () => {
     const [activeViewMode, setActiveViewMode] = useState<ActiveViewModeType>('B');
     const [activeDisplayPreference, setActiveDisplayPreference] = useState<DisplayPreferenceType>('table');
 
-    // Find the current study from the list
     const study = studies?.find(s => s._id === studyId) || null;
 
-    // Use our custom hooks to manage segment data
     const {
         displayableSegments,
         activeSegmentKey,
@@ -39,7 +37,6 @@ const StudyDetailPage = () => {
         handleViewModeChange
     } = useSegmentData(study, activeViewMode);
 
-    // Use our custom hook to calculate segment columns
     const {
         marketSegmentColumns,
         ageDemographicColumns,
@@ -55,13 +52,11 @@ const StudyDetailPage = () => {
         displayableSegments
     );
 
-    // Handler for view mode changes
     const onViewModeChange = (mode: ActiveViewModeType) => {
         const newMode = handleViewModeChange(mode);
         setActiveViewMode(newMode);
     };
 
-    // Handler for display preference changes
     const handleDisplayPreferenceChange = (preference: DisplayPreferenceType) => {
         setActiveDisplayPreference(preference);
     };

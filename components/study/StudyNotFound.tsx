@@ -26,7 +26,6 @@ const StudyNotFound: React.FC<StudyNotFoundProps> = ({ studyId }) => {
                 )}
                 <Link
                     href="/"
-                    // onClick={() => window.history.back()}
                     className="btn btn-primary inline-flex items-center gap-2"
                 >
                     <FiArrowLeft className="w-4 h-4" /> Back to Studies

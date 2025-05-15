@@ -5,7 +5,6 @@ import SegmentHeatMap from '@/components/charts/SegmentHeatMap';
 import { getSegmentDisplayName } from '@/app/utils/segmentUtils';
 import { SegmentConfig, SegmentColumn, DisplayPreferenceType } from '@/app/hooks/useSegmentData';
 
-// Helper type for segment data
 type SegmentData = { [key: string]: number };
 
 interface SegmentDataDisplayProps {
@@ -33,19 +32,15 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
 }) => {
     const [isMobile, setIsMobile] = useState(false);
 
-    // Check for mobile view on mount and window resize
     useEffect(() => {
         const checkMobile = () => {
             setIsMobile(window.innerWidth < 768);
         };
 
-        // Initial check
         checkMobile();
 
-        // Add resize listener
         window.addEventListener('resize', checkMobile);
 
-        // Clean up
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
@@ -61,16 +56,31 @@ const SegmentDataDisplay: React.FC<SegmentDataDisplayProps> = ({
     const isMarketSegmentsView = activeSegmentConfig?.isMindsetSubTab || segmentDisplayName === 'Market Segments';
 
     const getColorForValue = (value: number, minValue: number, maxValue: number) => {
-        const colors = [
-            '#e0f2fc', '#c4e4f6', '#99cce8', '#6badd9', '#4f91c8', '#3e74b3', '#2a58a5', '#163e8e', '#082776'
-        ];
+        if (minValue === maxValue) return '#f1c40f';
 
-        if (minValue === maxValue) return colors[Math.floor(colors.length / 2)];
+        const absMax = Math.max(Math.abs(minValue), Math.abs(maxValue));
 
-        const normalizedValue = (value - minValue) / (maxValue - minValue) * (colors.length - 1);
-        const colorIndex = Math.floor(normalizedValue);
+        const normalizedValue = (value - minValue) / (maxValue - minValue);
 
-        return colors[Math.min(colorIndex, colors.length - 1)];
+        let r, g, b = 0;
+
+        if (value === minValue) return '#00cc44';
+        if (value === maxValue) return '#cc0000';
+
+        if (normalizedValue < 0.5) {
+            r = Math.round(255 * (2 * normalizedValue));
+            g = 255;
+        } else {
+            r = 255;
+            g = Math.round(255 * (2 - 2 * normalizedValue));
+        }
+
+        const toHex = (c: number) => {
+            const hex = c.toString(16);
+            return hex.length === 1 ? '0' + hex : hex;
+        };
+
+        return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
     };
 
     const transformDataForChart = (question: Question, relevantColumns: SegmentColumn[], dataKeyPrefix: string) => {

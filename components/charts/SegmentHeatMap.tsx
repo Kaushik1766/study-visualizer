@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { ResponsiveContainer, Tooltip, XAxis, YAxis, Rectangle, ScatterChart, Scatter } from 'recharts';
+import React, { useState } from 'react';
 
 interface HeatMapDataPoint {
     x: string;
@@ -11,209 +10,201 @@ interface HeatMapDataPoint {
 interface SegmentHeatMapProps {
     data: HeatMapDataPoint[];
     title?: string;
-    colorRange?: string[];
     xAxisTitle?: string;
     yAxisTitle?: string;
 }
 
-const defaultColorRange = [
-    '#e0f2fc', '#c4e4f6', '#99cce8', '#6badd9', '#4f91c8', '#3e74b3', '#2a58a5', '#163e8e', '#082776'
-];
-
 const SegmentHeatMap: React.FC<SegmentHeatMapProps> = ({
     data,
     title,
-    colorRange = defaultColorRange,
     xAxisTitle = "Options",
     yAxisTitle = "Segments"
 }) => {
-    const [chartData, setChartData] = useState<HeatMapDataPoint[]>([]);
-    const [uniqueXValues, setUniqueXValues] = useState<string[]>([]);
-    const [uniqueYValues, setUniqueYValues] = useState<string[]>([]);
-    const [minValue, setMinValue] = useState<number>(0);
-    const [maxValue, setMaxValue] = useState<number>(0);
-    const [isMobile, setIsMobile] = useState(false);
-
-    useEffect(() => {
-        const checkMobile = () => {
-            setIsMobile(window.innerWidth < 768);
-        };
-
-        checkMobile();
-        window.addEventListener('resize', checkMobile);
-        return () => window.removeEventListener('resize', checkMobile);
-    }, []);
-
-    useEffect(() => {
-        if (!data || data.length === 0) return;
-
-        const xValues = [...new Set(data.map(item => item.x))];
-        const yValues = [...new Set(data.map(item => item.y))];
-
-        const values = data.map(d => d.value);
-        const min = Math.min(...values);
-        const max = Math.max(...values);
-
-        setUniqueXValues(xValues);
-        setUniqueYValues(yValues);
-        setMinValue(min);
-        setMaxValue(max);
-        setChartData(data);
-    }, [data]);
+    const [hoveredCell, setHoveredCell] = useState<{ x: string, y: string, value: number } | null>(null);
 
     if (!data || data.length === 0) {
         return <p className="text-sm text-center text-foreground py-4">No data available to display heatmap for this section.</p>;
     }
 
-    const formatXAxisTick = (value: string) => {
-        if (isMobile) {
-            const index = uniqueXValues.findIndex(x => x === value) + 1;
-            return `${index}`;
+    const uniqueXValues = [...new Set(data.map(item => item.x))];
+    const uniqueYValues = [...new Set(data.map(item => item.y))].reverse();
+
+    const dataMap: Record<string, HeatMapDataPoint> = {};
+    data.forEach(item => {
+        dataMap[`${item.x}_${item.y}`] = item;
+    });
+
+    const getTextColor = (backgroundColor: string): string => {
+        if (backgroundColor.startsWith('#')) {
+            const r = parseInt(backgroundColor.substring(1, 3), 16);
+            const g = parseInt(backgroundColor.substring(3, 5), 16);
+            const b = parseInt(backgroundColor.substring(5, 7), 16);
+
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            return luminance > 0.5 ? '#000000' : '#ffffff';
         }
-        if (value.length > 15) {
-            return `${value.substring(0, 13)}...`;
-        }
-        return value;
-    };
-
-    const formatYAxisTick = (value: string) => {
-        if (isMobile && value.length > 10) {
-            return `${value.substring(0, 8)}...`;
-        }
-        return value;
-    };
-
-    const CustomizedShape = (props: any) => {
-        const { cx, cy, payload } = props;
-        const cellSize = isMobile ? 12 : 30;
-
-        return (
-            <Rectangle
-                x={cx - cellSize / 2}
-                y={cy - cellSize / 2}
-                width={cellSize}
-                height={cellSize}
-                fill={payload.color}
-                stroke="var(--border)"
-                strokeWidth={1}
-                className="hover:opacity-80 transition-opacity"
-            />
-        );
-    };
-
-    const CustomTooltip = ({ active, payload }: any) => {
-        if (active && payload && payload.length) {
-            const data = payload[0].payload;
-            return (
-                <div className="bg-card p-3 border border-border shadow-md rounded-md text-foreground max-w-[200px]">
-                    <p className="font-semibold text-xs md:text-sm mb-1 break-words">{data.x}</p>
-                    <p className="text-xs md:text-sm">{data.y}: <span className="font-medium">{data.value}</span></p>
-                </div>
-            );
-        }
-        return null;
-    };
-
-    const mobileBaseHeight = 350;
-    const desktopBaseHeight = 450;
-    const chartHeight = isMobile
-        ? Math.max(mobileBaseHeight, uniqueYValues.length * 25)
-        : Math.max(desktopBaseHeight, uniqueYValues.length * 50);
-
-    const renderColorLegend = () => {
-        return (
-            <div className="flex flex-col items-center mt-2 md:mt-4 bg-secondary/30 py-1 md:py-2 rounded-md">
-                <p className="text-xs md:text-sm text-foreground mb-0 md:mb-1">Value Scale</p>
-                <div className="flex items-center">
-                    <span className="text-xs text-foreground mr-1 md:mr-2">{minValue}</span>
-                    <div className="flex h-4 md:h-6 border border-border shadow-sm">
-                        {colorRange.map((color, i) => (
-                            <div
-                                key={i}
-                                style={{
-                                    backgroundColor: color,
-                                    width: isMobile ? '12px' : '24px',
-                                    height: '100%'
-                                }}
-                            />
-                        ))}
-                    </div>
-                    <span className="text-xs text-foreground ml-1 md:ml-2">{maxValue}</span>
-                </div>
-            </div>
-        );
-    };
-
-    const renderFullTextLegend = () => {
-        if ((isMobile && uniqueXValues.length > 0) || uniqueXValues.some(x => x.length > 15)) {
-            return (
-                <div className="mt-2 bg-secondary/30 p-1 md:p-2 rounded-md text-xs">
-                    <p className="font-medium text-foreground mb-1 px-1">Labels Reference:</p>
-                    <div className="max-h-32 overflow-y-auto px-1">
-                        {uniqueXValues.map((value, index) => (
-                            <div key={index} className="mb-1 p-1 bg-card rounded border border-border text-xs">
-                                <span className="font-medium">{index + 1}.</span> {value}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            );
-        }
-        return null;
+        return '#000000';
     };
 
     return (
-        <div className="my-4 p-0 md:p-4 border border-border rounded-lg bg-background">
-            {title && <h4 className="text-md md:text-lg font-semibold text-foreground mb-2 md:mb-4 text-center px-2">{title}</h4>}
-            <div className="flex justify-between mb-1 md:mb-2 text-xs md:text-sm text-foreground px-2">
-                <div>{yAxisTitle}</div>
-                <div>{xAxisTitle}</div>
+        <div className="my-6 p-4 md:p-6 border border-border rounded-lg bg-background shadow-sm">
+            {title && (
+                <div className="mb-4 md:mb-6 text-center">
+                    <h4 className="text-lg md:text-xl font-semibold text-foreground">{title}</h4>
+                </div>
+            )}
+
+            {hoveredCell && (
+                <div
+                    className="fixed z-50 bg-card p-3 rounded-md shadow-lg border border-border max-w-md"
+                    style={{
+                        top: window.event ? (window.event as MouseEvent).clientY + 10 : 0,
+                        left: window.event ? (window.event as MouseEvent).clientX + 10 : 0,
+                    }}
+                >
+                    <div className="mb-1">
+                        <span className="font-medium">Option: </span>
+                        <span>{hoveredCell.x}</span>
+                    </div>
+                    <div className="mb-1">
+                        <span className="font-medium">Segment: </span>
+                        <span>{hoveredCell.y}</span>
+                    </div>
+                    <div>
+                        <span className="font-medium">Value: </span>
+                        <span>{hoveredCell.value}</span>
+                    </div>
+                </div>
+            )}
+
+            <div className="flex justify-center w-full">
+                <div className="w-full max-w-full overflow-x-auto">
+                    <table className="w-full border-collapse" style={{
+                        tableLayout: 'auto'
+                    }}>
+                        <thead>
+                            <tr>
+                                <th className="border-b border-r border-border bg-secondary/20 p-3 font-medium text-foreground text-xs md:text-sm"
+                                    style={{ width: '180px', minWidth: '180px' }}>
+                                    {yAxisTitle} / {xAxisTitle}
+                                </th>
+                                {uniqueXValues.map((x, xIndex) => (
+                                    <th key={`header-${xIndex}`}
+                                        className="border-b border-border p-3 text-center font-medium text-foreground text-xs md:text-sm"
+                                        style={{
+                                            minWidth: '100px',
+                                            maxWidth: '200px',
+                                            wordBreak: 'break-word',
+                                            whiteSpace: 'normal'
+                                        }}
+                                    >
+                                        {x}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {uniqueYValues.map((y, yIndex) => (
+                                <tr key={`row-${yIndex}`}>
+                                    <th className="border-r border-border bg-secondary/20 p-3 text-right font-medium text-foreground text-xs md:text-sm"
+                                        style={{
+                                            wordBreak: 'break-word',
+                                            whiteSpace: 'normal',
+                                            width: '180px',
+                                            minWidth: '180px'
+                                        }}
+                                    >
+                                        {y}
+                                    </th>
+
+                                    {uniqueXValues.map((x, xIndex) => {
+                                        const dataPoint = dataMap[`${x}_${y}`];
+                                        const value = dataPoint?.value ?? 0;
+                                        const color = dataPoint?.color || '#f5f5f5';
+                                        const textColor = getTextColor(color);
+
+                                        return (
+                                            <td
+                                                key={`cell-${xIndex}-${yIndex}`}
+                                                className="border border-gray-100"
+                                                style={{
+                                                    backgroundColor: color,
+                                                    height: '80px',
+                                                    textAlign: 'center',
+                                                    verticalAlign: 'middle',
+                                                    minWidth: '100px',
+                                                    maxWidth: '200px'
+                                                }}
+                                            >
+                                                <div
+                                                    className="flex items-center justify-center h-full w-full font-bold text-2xl hover:opacity-90 transition-opacity"
+                                                    style={{ color: textColor }}
+                                                >
+                                                    {value}
+                                                </div>
+                                            </td>
+                                        );
+                                    })}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div className="bg-card border border-border rounded-md flex justify-center items-center overflow-hidden">
-                <ResponsiveContainer width="90%" height={chartHeight}>
-                    <ScatterChart
-                        margin={{
-                            top: isMobile ? 10 : 20,
-                            right: isMobile ? 20 : 60,
-                            bottom: isMobile ? 10 : 20,
-                            left: isMobile ? 20 : 60,
-                        }}
-                    >
-                        <XAxis
-                            type="category"
-                            dataKey="x"
-                            name="option"
-                            allowDuplicatedCategory={false}
-                            tick={{ fontSize: isMobile ? 9 : 11, fill: 'var(--foreground)' }}
-                            interval={0}
-                            height={40}
-                            angle={0}
-                            textAnchor="middle"
-                            axisLine={{ stroke: 'var(--border)' }}
-                            tickLine={{ stroke: 'var(--border)' }}
-                            tickFormatter={formatXAxisTick}
-                        />
-                        <YAxis
-                            type="category"
-                            dataKey="y"
-                            name="segment"
-                            allowDuplicatedCategory={false}
-                            width={isMobile ? 50 : 80}
-                            tick={{ fontSize: isMobile ? 9 : 11, fill: 'var(--foreground)' }}
-                            axisLine={{ stroke: 'var(--border)' }}
-                            tickLine={{ stroke: 'var(--border)' }}
-                            tickFormatter={formatYAxisTick}
-                        />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Scatter
-                            data={chartData}
-                            shape={<CustomizedShape />}
-                        />
-                    </ScatterChart>
-                </ResponsiveContainer>
+
+            <div className="mt-6 pt-4 border-t border-border">
+                <div className="flex justify-center mb-2">
+                    <div className="w-11/12 md:w-4/5 relative h-6 flex">
+                        <div className="absolute inset-0 rounded-md shadow-md" style={{
+                            backgroundImage: 'linear-gradient(to right, #00cc44, #88cc44, #ffff00, #ffaa00, #ff6600, #cc0000)',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.12)'
+                        }}></div>
+
+                        {data.length > 0 && (() => {
+                            const values = data.map(d => d.value);
+                            const min = Math.min(...values);
+                            const max = Math.max(...values);
+                            const range = max - min;
+
+                            const markers = [
+                                min,
+                                min + range * 0.25,
+                                min + range * 0.5,
+                                min + range * 0.75,
+                                max
+                            ];
+
+                            return (
+                                <>
+                                    {markers.map((marker, index) => {
+                                        const position = index * 25;
+                                        return (
+                                            <div
+                                                key={`marker-${index}`}
+                                                className="absolute -bottom-6 text-xs font-medium"
+                                                style={{
+                                                    left: `${position}%`,
+                                                    transform: index === 0 ? 'none' :
+                                                        index === markers.length - 1 ? 'translateX(-100%)' : 'translateX(-50%)'
+                                                }}
+                                            >
+                                                {marker.toFixed(1)}
+                                            </div>
+                                        );
+                                    })}
+                                </>
+                            );
+                        })()}
+                    </div>
+                </div>
+
+                <div className="text-center mt-8 mb-2">
+                    <p className="text-xs text-muted-foreground">
+                        Values range from lowest (green) to highest (red)
+                    </p>
+                </div>
             </div>
-            {renderColorLegend()}
-            {renderFullTextLegend()}
         </div>
     );
 };
